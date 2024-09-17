@@ -1,0 +1,27 @@
+{
+
+    "login" : {
+        "login": "Login",
+        "email": "Email",
+        "enter": "Enter",
+        "password": "Password",
+        "signUpPrompt": "Already have an account? ",
+        "signUp": "Sign Up",
+        "orLoginWith": "Or login with"
+    },
+    "signup" : {
+        "login": "Login",
+        "email": "Email",
+        "userName": "Username",
+        "userNamePrompt": "Enter your username",
+        "emailPrompt": "Enter your email",
+        "password": "Password",
+        "passwordPrompt": "Enter your password",
+        "confirmPassword": "Confirm Password",
+        "confirmPasswordPrompt": "Confirm your password",
+        "loginPrompt": "Already have an account? ",
+        "signup": "Sign Up",
+        "orSignUpWith": "Or sign up with"
+    }
+    
+}
