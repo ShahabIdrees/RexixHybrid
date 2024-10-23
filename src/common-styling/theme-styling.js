@@ -2,6 +2,7 @@
 import {StyleSheet, useColorScheme} from 'react-native';
 import {darkColors, lightColors} from '../utils/colors';
 import {hp} from '../utils/environment';
+import {shadow} from 'react-native-paper';
 
 const commonStyles = {
   container: {
@@ -57,6 +58,20 @@ const commonStyles = {
     fontFamily: 'Roboto-Regular',
     marginVertical: 10,
   },
+  shadow: {
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  dropdown: {
+    padding: 8,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  dropdownPlaceholderStyle: {},
+  dropdownSelectedTextStyle: {},
+  dropdownInputSearchStyle: {},
 };
 
 const darkThemeStyles = StyleSheet.create({
@@ -110,6 +125,23 @@ const darkThemeStyles = StyleSheet.create({
     ...commonStyles.prompt,
     color: darkColors.primaryText,
   },
+  shadow: {
+    ...commonStyles.shadow,
+    shadowColor: darkColors.shadowColor,
+  },
+  dropdown: {
+    ...commonStyles.dropdown,
+    backgroundColor: darkColors.secondary,
+  },
+  dropdownPlaceholderStyle: {
+    ...commonStyles.dropdownPlaceholderStyle,
+  },
+  dropdownSelectedTextStyle: {
+    ...commonStyles.dropdownSelectedTextStyle,
+  },
+  dropdownInputSearchStyle: {
+    ...commonStyles.dropdownInputSearchStyle,
+  },
 });
 
 const lightThemeStyles = StyleSheet.create({
@@ -162,11 +194,27 @@ const lightThemeStyles = StyleSheet.create({
     ...commonStyles.prompt,
     color: lightColors.primaryText,
   },
+  shadow: {
+    ...commonStyles.shadow,
+    shadowColor: lightColors.shadowColor,
+  },
+  dropdown: {
+    ...commonStyles.dropdown,
+    backgroundColor: lightColors.secondary,
+  },
+  dropdownPlaceholderStyle: {
+    ...commonStyles.dropdownPlaceholderStyle,
+  },
+  dropdownSelectedTextStyle: {
+    ...commonStyles.dropdownSelectedTextStyle,
+  },
+  dropdownInputSearchStyle: {
+    ...commonStyles.dropdownInputSearchStyle,
+  },
 });
 
 const useCommonStyles = () => {
   const colorScheme = useColorScheme(); // 'dark' or 'light'
-
   // Return the respective color set based on the color scheme
   return colorScheme === 'dark' ? darkThemeStyles : lightThemeStyles;
 };

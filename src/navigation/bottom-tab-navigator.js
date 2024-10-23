@@ -2,6 +2,7 @@ import React from 'react';
 import {Animated, useColorScheme} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {
+  AddPost,
   Home,
   Messages,
   Notifications,
@@ -188,7 +189,7 @@ function BottomTabNavigator() {
       <Tab.Screen name="Home" component={Home} />
       {/* <Tab.Screen name="Settings" component={Settings} /> */}
       <Tab.Screen name="Search" component={Search} />
-      <Tab.Screen name="Add" component={Profile} />
+      <Tab.Screen name="Add" component={AddPost} />
       {/* <Tab.Screen name="Profile" component={Profile} /> */}
       <Tab.Screen name="Notifications" component={Notifications} />
       <Tab.Screen name="Messages" component={Messages} />

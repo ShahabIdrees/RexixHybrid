@@ -6,6 +6,7 @@ import Settings from './settings';
 import Search from './search';
 import Product from './product';
 import Brand from './brand';
+import AddPost from './add-post';
 export {
   Home,
   Profile,
@@ -15,4 +16,5 @@ export {
   Search,
   Product,
   Brand,
+  AddPost,
 };

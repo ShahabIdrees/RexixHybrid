@@ -12,6 +12,7 @@ export const darkColors = {
   inputTextColor: '#E3E3E3',
   placeholderColor: '#E3E3E3',
   linkColor: '#4A90E2',
+  shadowColor: '#E4E6EB',
 };
 
 export const lightColors = {
@@ -24,6 +25,7 @@ export const lightColors = {
   inputTextColor: '#000000',
   placeholderColor: '#5F6368',
   linkColor: '#1E90FF',
+  shadowColor: '#000000',
 };
 
 // Create a custom hook to get the current color scheme

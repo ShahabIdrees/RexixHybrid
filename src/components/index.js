@@ -10,6 +10,8 @@ import SearchResults from './search-results';
 import CustomPicker from './custom-picker';
 import StatsComponent from './stats-component';
 import ImageCarousel from './image-carousel';
+import CustomDropdown from './custom-dropdown';
+
 export {
   AuthInput,
   CustomButton,
@@ -23,4 +25,5 @@ export {
   CustomPicker,
   StatsComponent,
   ImageCarousel,
+  CustomDropdown,
 };
