@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   useColorScheme,
   Pressable,
+  Animated,
 } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import Pagination from 'react-native-reanimated-carousel';
@@ -32,13 +33,25 @@ import {
 import RatingComponent from './rating-component';
 import {useNavigation} from '@react-navigation/native';
 import {hp, windowWidth} from '../utils/environment';
+import {
+  Star,
+  StarFilled,
+  MessageCircle,
+  ThumbsUp,
+  ThumbsDown,
+  Share2,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react-native';
 
-const ReviewPost = React.memo(({title, content, images}) => {
+const ReviewPost = React.memo(({title, content, images, postId = '1'}) => {
   const navigation = useNavigation();
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [scaleAnim] = useState(new Animated.Value(1));
 
   const colorScheme = useColorScheme();
   const colors = colorScheme === 'dark' ? darkColors : lightColors;
@@ -46,11 +59,39 @@ const ReviewPost = React.memo(({title, content, images}) => {
     colorScheme === 'dark' ? darkThemeStyles : lightThemeStyles;
 
   const handleLikePress = () => {
+    // Animate button press
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
     setLiked(!liked);
     if (disliked) setDisliked(false);
   };
 
   const handleDislikePress = () => {
+    // Animate button press
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
     setDisliked(!disliked);
     if (liked) setLiked(false);
   };
@@ -67,6 +108,13 @@ const ReviewPost = React.memo(({title, content, images}) => {
     navigation.navigate('Profile');
   };
 
+  const navigateToCommentsPage = () => {
+    navigation.navigate('Comments', {postId, title, content});
+  };
+
+  // Default avatar placeholder
+  const avatarPlaceholder = 'https://i.pravatar.cc/100';
+
   return (
     <View
       style={[
@@ -76,202 +124,208 @@ const ReviewPost = React.memo(({title, content, images}) => {
             colorScheme === 'dark'
               ? darkColors.secondary
               : lightColors.secondary,
+          shadowColor: colorScheme === 'dark' ? '#000' : '#888',
         },
       ]}>
       <View style={styles.header}>
-        <View style={{flexDirection: 'row'}}>
+        <View style={styles.profileSection}>
           <TouchableOpacity
-            style={[
-              styles.profileImageWrapper,
-              {borderColor: colors.primaryText, borderWidth: 0.5},
-            ]}
+            style={styles.profileImageWrapper}
             onPress={navigateToProfilePage}>
-            <Image />
+            <Image
+              source={{uri: avatarPlaceholder}}
+              style={styles.profileImage}
+            />
           </TouchableOpacity>
-          <View style={{marginHorizontal: 8}}>
+
+          <View style={styles.userInfoContainer}>
             <Pressable onPress={navigateToProfilePage}>
-              <Text
-                style={
-                  colorScheme === 'dark'
-                    ? darkThemeStyles.label
-                    : lightThemeStyles.label
-                }>
-                Name
+              <Text style={[styles.username, {color: colors.primaryText}]}>
+                John Reviewer
               </Text>
             </Pressable>
 
-            <Text
-              style={{
-                fontSize: 12,
-                color:
-                  colorScheme === 'dark'
-                    ? darkColors.primaryText
-                    : lightColors.primaryText,
-              }}>
-              2 hours ago
-            </Text>
+            <View style={styles.timeContainer}>
+              <Calendar size={12} color={colors.secondaryText} />
+              <Text style={[styles.timeText, {color: colors.secondaryText}]}>
+                2 hours ago
+              </Text>
+            </View>
           </View>
         </View>
-        <View>
-          {/* Rating Component */}
+
+        <View style={styles.ratingContainer}>
           <RatingComponent rating={4} />
         </View>
       </View>
-      <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-        <TouchableOpacity onPress={navigateToProductPage}>
-          <Text style={[commonStyles.label, {color: colors.primaryText}]}>
-            {'Product Name'}
+
+      <View style={styles.productBrandContainer}>
+        <TouchableOpacity
+          style={styles.tagContainer}
+          onPress={navigateToProductPage}>
+          <Text style={[styles.tagText, {color: colors.brandAccentColor}]}>
+            Sony WH-1000XM4
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={navigateToBrandPage}>
-          <Text style={[commonStyles.label, {color: colors.primaryText}]}>
-            {'Brand Name'}
+
+        <TouchableOpacity
+          style={styles.tagContainer}
+          onPress={navigateToBrandPage}>
+          <Text style={[styles.tagText, {color: colors.brandSecondaryColor}]}>
+            Sony
           </Text>
         </TouchableOpacity>
       </View>
+
+      <Text style={[styles.title, {color: colors.primaryText}]}>{title}</Text>
+
       <Text
-        style={[
-          commonStyles.title,
-          {color: colors.primaryText},
-          {numberOfLines: 1},
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.content,
-          {
-            color:
-              colorScheme === 'dark'
-                ? darkColors.primaryText
-                : lightColors.primaryText,
-          },
-        ]}
-        numberOfLines={showMore ? 0 : 3}
-        ellipsizeMode={showMore ? 'tail' : 'clip'}>
+        style={[styles.content, {color: colors.primaryText}]}
+        numberOfLines={showMore ? undefined : 3}
+        ellipsizeMode="tail">
         {content}
       </Text>
-      {!showMore && content.length > 100 && (
-        <TouchableOpacity onPress={() => setShowMore(!showMore)}>
-          <Text style={[commonStyles.label, {color: colors.primaryText}]}>
+
+      {content.length > 100 && (
+        <TouchableOpacity
+          style={styles.showMoreButton}
+          onPress={() => setShowMore(!showMore)}>
+          <Text style={[styles.showMoreText, {color: colors.linkColor}]}>
             {showMore ? 'Show Less' : 'Show More'}
           </Text>
+          {showMore ? (
+            <ChevronUp size={16} color={colors.linkColor} />
+          ) : (
+            <ChevronDown size={16} color={colors.linkColor} />
+          )}
         </TouchableOpacity>
       )}
 
       {images.length > 0 && (
-        <View>
+        <View style={styles.carouselContainer}>
           <Carousel
-            width={windowWidth}
-            height={windowWidth}
+            width={windowWidth - 48}
+            height={windowWidth * 0.6}
             data={images}
-            style={{alignSelf: 'center'}}
+            style={styles.carousel}
             loop={false}
-            scrollAnimationDuration={50}
+            scrollAnimationDuration={300}
             autoPlay={false}
             onSnapToItem={index => setCurrentIndex(index)}
             renderItem={({item}) => (
-              <Image source={{uri: item}} style={styles.singleImage} />
+              <Image source={{uri: item}} style={styles.carouselImage} />
             )}
           />
+
           {images.length > 1 && (
-            <View style={{alignItems: 'center', marginBottom: 4}}>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                {images.map((_, index) => {
-                  return (
-                    <View
-                      key={index}
-                      style={[
+            <View style={styles.paginationContainer}>
+              {images.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.paginationDot,
+                    {
+                      width: index === currentIndex ? 18 : 8,
+                      backgroundColor:
                         index === currentIndex
-                          ? styles.dotHighlightedStyle
-                          : styles.dotStyle,
-                        {
-                          backgroundColor:
-                            index === currentIndex
-                              ? colors.brandAccentColor
-                              : 'gray',
-                        },
-                      ]}
-                    />
-                  );
-                })}
-              </View>
+                          ? colors.brandAccentColor
+                          : colors.divider,
+                    },
+                  ]}
+                />
+              ))}
             </View>
           )}
         </View>
       )}
 
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-around',
-          borderBottomColor: colors.borderColor,
-          borderBottomWidth: 0.3,
-          paddingBottom: 8,
-          marginBottom: 8,
-        }}>
-        <View
-          style={{
-            flexDirection: 'row',
-            flex: 1,
-          }}>
-          <View style={{flexDirection: 'row'}}>
-            <LikeRound />
-            <Text style={[{marginHorizontal: 4}, {color: colors.primaryText}]}>
-              {5}
+      <View style={[styles.statsContainer, {borderColor: colors.divider}]}>
+        <View style={styles.statGroup}>
+          <View style={styles.statItem}>
+            <ThumbsUp size={14} color={colors.primaryText} />
+            <Text style={[styles.statText, {color: colors.primaryText}]}>
+              5
             </Text>
           </View>
-          <View style={{flexDirection: 'row', marginHorizontal: 8}}>
-            <DislikeRound />
-            <Text style={[{marginLeft: 4}, {color: colors.primaryText}]}>
-              {4}
+
+          <View style={styles.statItem}>
+            <ThumbsDown size={14} color={colors.primaryText} />
+            <Text style={[styles.statText, {color: colors.primaryText}]}>
+              2
             </Text>
           </View>
         </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            flex: 1,
-            justifyContent: 'space-around',
-          }}>
-          <Text style={[commonStyles.label, {color: colors.primaryText}]}>
-            {12} Comments
+
+        <TouchableOpacity onPress={navigateToCommentsPage}>
+          <Text style={[styles.statText, {color: colors.secondaryText}]}>
+            12 Comments
           </Text>
-          <Text style={[commonStyles.label, {color: colors.primaryText}]}>
-            {159} Shares
-          </Text>
-        </View>
+        </TouchableOpacity>
+
+        <Text style={[styles.statText, {color: colors.secondaryText}]}>
+          8 Shares
+        </Text>
       </View>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-around',
-        }}>
-        <TouchableOpacity onPress={handleLikePress}>
-          {liked ? (
-            <LikeFilled />
-          ) : colorScheme === 'dark' ? (
-            <LikeDark />
-          ) : (
-            <Like />
-          )}
+
+      <View style={styles.actionContainer}>
+        <Animated.View style={{transform: [{scale: scaleAnim}]}}>
+          <TouchableOpacity
+            style={[
+              styles.actionButton,
+              liked && {backgroundColor: 'rgba(59, 130, 246, 0.1)'},
+            ]}
+            onPress={handleLikePress}>
+            <ThumbsUp
+              size={18}
+              color={liked ? colors.brandAccentColor : colors.secondaryText}
+              fill={liked ? colors.brandAccentColor : 'transparent'}
+            />
+            <Text
+              style={[
+                styles.actionText,
+                {color: liked ? colors.brandAccentColor : colors.secondaryText},
+              ]}>
+              Like
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+        <Animated.View style={{transform: [{scale: scaleAnim}]}}>
+          <TouchableOpacity
+            style={[
+              styles.actionButton,
+              disliked && {backgroundColor: 'rgba(239, 68, 68, 0.1)'},
+            ]}
+            onPress={handleDislikePress}>
+            <ThumbsDown
+              size={18}
+              color={disliked ? colors.error : colors.secondaryText}
+              fill={disliked ? colors.error : 'transparent'}
+            />
+            <Text
+              style={[
+                styles.actionText,
+                {color: disliked ? colors.error : colors.secondaryText},
+              ]}>
+              Dislike
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={navigateToCommentsPage}>
+          <MessageCircle size={18} color={colors.secondaryText} />
+          <Text style={[styles.actionText, {color: colors.secondaryText}]}>
+            Comment
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleDislikePress}>
-          {disliked ? (
-            <DislikeFilled />
-          ) : colorScheme === 'dark' ? (
-            <DislikeDark />
-          ) : (
-            <Dislike />
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity>
-          {colorScheme === 'dark' ? <CommentDark /> : <Comment />}
-        </TouchableOpacity>
-        <TouchableOpacity>
-          {colorScheme === 'dark' ? <ShareDark /> : <Share />}
+
+        <TouchableOpacity style={styles.actionButton}>
+          <Share2 size={18} color={colors.secondaryText} />
+          <Text style={[styles.actionText, {color: colors.secondaryText}]}>
+            Share
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -280,59 +334,157 @@ const ReviewPost = React.memo(({title, content, images}) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 14,
-    elevation: 1,
-    marginVertical: 4,
-    borderRadius: 10,
-    borderColor: '#e1e1e1',
-  },
-  title: {
-    fontSize: hp(16),
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: 'black',
-  },
-  content: {
-    fontSize: 14,
-    marginBottom: 10,
-    color: 'black',
-  },
-  singleImage: {
-    width: '100%',
-    alignSelf: 'center',
-    flex: 1,
-    // borderRadius: 4,
-    // marginRight: 24,
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  dotStyle: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    marginHorizontal: 2,
-    backgroundColor: 'gray',
-  },
-  dotHighlightedStyle: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginHorizontal: 2,
-  },
-  profileImageWrapper: {
-    height: 28,
-    width: 28,
-    borderRadius: 14,
-    borderWidth: 0.1,
+    padding: 16,
+    marginVertical: 10,
+    marginHorizontal: 8,
+    borderRadius: 16,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomWidth: 0.15,
-    borderBottomColor: 'gray',
-    paddingBottom: 8,
-    marginBottom: 4,
+    marginBottom: 12,
+  },
+  profileSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  profileImageWrapper: {
+    height: 40,
+    width: 40,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  profileImage: {
+    height: '100%',
+    width: '100%',
+  },
+  userInfoContainer: {
+    marginLeft: 12,
+  },
+  username: {
+    fontSize: 15,
+    fontFamily: 'Roboto-Medium',
+    marginBottom: 2,
+  },
+  timeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timeText: {
+    fontSize: 12,
+    fontFamily: 'Roboto-Regular',
+    marginLeft: 4,
+  },
+  ratingContainer: {
+    alignItems: 'flex-end',
+  },
+  productBrandContainer: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  tagContainer: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  tagText: {
+    fontSize: 13,
+    fontFamily: 'Roboto-Medium',
+  },
+  title: {
+    fontSize: 18,
+    fontFamily: 'Roboto-Bold',
+    marginBottom: 8,
+  },
+  content: {
+    fontSize: 15,
+    fontFamily: 'Roboto-Regular',
+    lineHeight: 22,
+    marginBottom: 8,
+  },
+  showMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  showMoreText: {
+    fontSize: 14,
+    fontFamily: 'Roboto-Medium',
+    marginRight: 4,
+  },
+  carouselContainer: {
+    marginVertical: 12,
+    alignItems: 'center',
+  },
+  carousel: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  carouselImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  paginationDot: {
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 3,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    marginVertical: 12,
+  },
+  statGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  statText: {
+    fontSize: 13,
+    fontFamily: 'Roboto-Regular',
+    marginLeft: 6,
+    marginRight: 12,
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  actionText: {
+    fontSize: 14,
+    fontFamily: 'Roboto-Medium',
+    marginLeft: 6,
   },
 });
 

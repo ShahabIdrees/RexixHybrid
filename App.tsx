@@ -6,49 +6,53 @@
  */
 
 import { NavigationContainer } from '@react-navigation/native';
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, { useEffect } from 'react';
 import {
   SafeAreaView,
-  ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
-  useColorScheme,
-  View,
 } from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-import { AuthenticationStackNavigator } from './src/navigation';
-import {Login}  from './src/screens/auth';
 import MainStackNavigator from './src/navigation/main-stack-navigator';
 import { I18nextProvider } from 'react-i18next';
 import i18next from './src/services/i18next';
+import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
+import SplashScreen from 'react-native-splash-screen';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-
-function App(): React.JSX.Element {
-
+// Main app content with access to theme context
+const AppContent = () => {
+  const { actualTheme, colors } = useTheme();
+  
   return (
-    <I18nextProvider i18n={i18next}>
-      <SafeAreaView style={{flex: 1}}>
+    <>
+      <StatusBar
+        barStyle={actualTheme === 'dark' ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.primaryBG}
+      />
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primaryBG }}>
         <NavigationContainer>
-          {/* <AuthenticationStackNavigator /> */}
-          {/* <Login /> */}
-          {/* <Login/> */}
           <MainStackNavigator />
         </NavigationContainer>
       </SafeAreaView>
-    </I18nextProvider>
+    </>
+  );
+};
+
+function App(): React.JSX.Element {
+  // Hide splash screen after app is ready
+  useEffect(() => {
+    try {
+      SplashScreen.hide();
+    } catch (error) {
+      console.log('SplashScreen not available');
+    }
+  }, []);
+
+  return (
+    <ThemeProvider>
+      <I18nextProvider i18n={i18next}>
+        <AppContent />
+      </I18nextProvider>
+    </ThemeProvider>
   );
 }
 

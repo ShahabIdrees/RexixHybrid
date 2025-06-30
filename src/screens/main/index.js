@@ -1,20 +1,23 @@
 import Home from './home';
-import Profile from './profile';
-import Notifications from './notifications';
 import Messages from './messages';
-import Settings from './settings';
+import Notifications from './notifications';
 import Search from './search';
+import Profile from './profile';
+import Settings from './settings';
+import AddPost from './add-post';
 import Product from './product';
 import Brand from './brand';
-import AddPost from './add-post';
+import Comments from './comments';
+
 export {
   Home,
-  Profile,
-  Notifications,
   Messages,
-  Settings,
+  Notifications,
   Search,
+  Profile,
+  Settings,
+  AddPost,
   Product,
   Brand,
-  AddPost,
+  Comments,
 };
