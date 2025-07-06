@@ -13,6 +13,7 @@ import {
 import {ReviewPost} from '../../components';
 import {darkColors, lightColors} from '../../utils/colors';
 import {generateDummyPosts} from '../../utils/helper-functions';
+import {MessageSquare, User} from 'lucide-react-native';
 
 // Persistent counter for generating unique IDs
 
@@ -80,21 +81,28 @@ const Home = ({navigation}) => {
         ]}>
         Rexix
       </Text>
-      <TouchableOpacity
-        onPress={() => {
-          navigation.navigate('Profile');
-        }}>
-        <Image
-          source={{uri: 'sk'}}
-          style={{
-            borderColor: colors.borderColor,
-            borderWidth: 0.1,
-            height: 24,
-            aspectRatio: 1,
-            borderRadius: 24,
-          }}
-        />
-      </TouchableOpacity>
+      <View style={styles.headerActions}>
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={() => {
+            navigation.navigate('Messages');
+          }}>
+          <MessageSquare
+            size={24}
+            color={colorScheme === 'dark' ? '#B00814' : '#3A0050'}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={() => {
+            navigation.navigate('Profile');
+          }}>
+          <User
+            size={24}
+            color={colorScheme === 'dark' ? '#B00814' : '#3A0050'}
+          />
+        </TouchableOpacity>
+      </View>
     </Animated.View>
   );
 
@@ -165,6 +173,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     // textAlign: 'left',
     // alignSelf: 'flex-start',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  headerButton: {
+    padding: 4,
   },
   list: {
     paddingTop: 60,

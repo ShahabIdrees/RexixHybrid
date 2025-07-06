@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   ScrollView,
   Image,
@@ -6,6 +6,7 @@ import {
   View,
   Text,
   FlatList,
+  TextInput,
 } from 'react-native';
 import {useCommonStyles} from '../../common-styling/theme-styling';
 import {useAppColors} from '../../utils/colors';
@@ -17,12 +18,14 @@ import {TouchableOpacity} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {ProductTab, ReviewsTab, ServicesTab} from '../../components/tabs';
 import {Tabs} from 'react-native-collapsible-tab-view';
+import {Search} from 'lucide-react-native';
 
 const Tab = createMaterialTopTabNavigator();
 
 const Brand = () => {
   const commonStyles = useCommonStyles();
   const colors = useAppColors();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const dummyStats = [
     {id: '1', title: 'Customers', count: 688889},
@@ -121,6 +124,19 @@ const Brand = () => {
           </View>
         </View>
       </View>
+
+      {/* Search Bar */}
+      <View style={[styles.searchBar, {backgroundColor: colors.secondary}]}>
+        <Search size={20} color={colors.secondaryText} />
+        <TextInput
+          style={[styles.searchInput, {color: colors.primaryText}]}
+          placeholder="Search products, services, reviews..."
+          placeholderTextColor={colors.secondaryText}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </View>
+
       <View style={styles.contactDetails}>
         {/* Add contact details here */}
         <View style={styles.contactItem}>
@@ -191,6 +207,21 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 12,
     justifyContent: 'center',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 48,
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 12,
+    fontSize: 15,
+    fontFamily: 'Roboto-Regular',
   },
   contactDetails: {
     paddingHorizontal: 16,

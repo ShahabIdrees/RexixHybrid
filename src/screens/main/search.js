@@ -15,7 +15,13 @@ import {
 import {useAppColors} from '../../utils/colors';
 import {useCommonStyles} from '../../common-styling/theme-styling';
 import {useNavigation} from '@react-navigation/native';
-import {Search, ChevronRight, Star} from 'lucide-react-native';
+import {
+  Search,
+  ChevronRight,
+  Star,
+  MessageSquare,
+  User,
+} from 'lucide-react-native';
 
 const {width} = Dimensions.get('window');
 const cardWidth = (width - 48) / 2;
@@ -24,6 +30,7 @@ const ExploreScreen = () => {
   const navigation = useNavigation();
   const commonStyles = useCommonStyles();
   const colors = useAppColors();
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Mock data for categories
   const categories = [
@@ -175,8 +182,13 @@ const ExploreScreen = () => {
   ];
 
   const handleSearch = () => {
-    // Navigate to search results screen
-    navigation.navigate('SearchResults');
+    if (searchQuery.trim()) {
+      navigation.navigate('SearchResults', {query: searchQuery.trim()});
+    }
+  };
+
+  const handleSearchSubmit = () => {
+    handleSearch();
   };
 
   const navigateToCategory = category => {
@@ -297,15 +309,53 @@ const ExploreScreen = () => {
   return (
     <SafeAreaView
       style={[styles.container, {backgroundColor: colors.primaryBG}]}>
-      {/* Search Bar */}
-      <TouchableOpacity
-        style={[styles.searchBar, {backgroundColor: colors.secondary}]}
-        onPress={handleSearch}>
-        <Search size={20} color={colors.secondaryText} />
-        <Text style={[styles.searchPlaceholder, {color: colors.secondaryText}]}>
-          Search products, services, brands...
+      {/* Header */}
+      <View style={[styles.header, {backgroundColor: colors.primaryBG}]}>
+        <Text style={[styles.headerText, {color: colors.brandAccentColor}]}>
+          Rexix
         </Text>
-      </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => {
+              navigation.navigate('Messages');
+            }}>
+            <MessageSquare size={24} color={colors.brandAccentColor} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => {
+              navigation.navigate('Profile');
+            }}>
+            <User size={24} color={colors.brandAccentColor} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Search Bar */}
+      <View style={[styles.searchBar, {backgroundColor: colors.secondary}]}>
+        <Search size={20} color={colors.secondaryText} />
+        <TextInput
+          style={[styles.searchInput, {color: colors.primaryText}]}
+          placeholder="Search products, services, brands..."
+          placeholderTextColor={colors.secondaryText}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onSubmitEditing={handleSearchSubmit}
+          returnKeyType="search"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
+            <Text
+              style={[
+                styles.searchButtonText,
+                {color: colors.brandAccentColor},
+              ]}>
+              Search
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       <ScrollView
         style={styles.scrollContainer}
@@ -415,6 +465,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  headerButton: {
+    padding: 4,
+  },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -425,10 +496,21 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
   },
-  searchPlaceholder: {
+  searchInput: {
+    flex: 1,
     marginLeft: 12,
     fontSize: 15,
     fontFamily: 'Roboto-Regular',
+  },
+  searchButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(176, 8, 20, 0.1)',
+  },
+  searchButtonText: {
+    fontSize: 14,
+    fontFamily: 'Roboto-Medium',
   },
   scrollContainer: {
     flex: 1,

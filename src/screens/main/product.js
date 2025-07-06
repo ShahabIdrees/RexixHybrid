@@ -8,13 +8,15 @@ import {
   FlatList,
   RefreshControl,
   ScrollView,
+  TextInput,
+  TouchableOpacity,
 } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import {useCommonStyles} from '../../common-styling/theme-styling';
 import {ReviewPost, StatsComponent} from '../../components';
 import {useAppColors} from '../../utils/colors';
 import {generateDummyPosts} from '../../utils/helper-functions';
-import {TouchableOpacity} from 'react-native';
+import {Search} from 'lucide-react-native';
 
 // Get the window dimensions
 const {width: windowWidth} = Dimensions.get('window');
@@ -23,6 +25,7 @@ const Product = ({navigation}) => {
   const [posts, setPosts] = useState(generateDummyPosts(8));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const commonStyles = useCommonStyles();
   const colors = useAppColors();
@@ -60,10 +63,26 @@ const Product = ({navigation}) => {
   );
   const ListHeaderComponent = () => {
     return (
-      <Text
-        style={[commonStyles.subHeading, {marginTop: 8, marginHorizontal: 8}]}>
-        Reviews
-      </Text>
+      <View>
+        <Text
+          style={[
+            commonStyles.subHeading,
+            {marginTop: 8, marginHorizontal: 8},
+          ]}>
+          Reviews
+        </Text>
+        {/* Search Bar for Reviews */}
+        <View style={[styles.searchBar, {backgroundColor: colors.secondary}]}>
+          <Search size={20} color={colors.secondaryText} />
+          <TextInput
+            style={[styles.searchInput, {color: colors.primaryText}]}
+            placeholder="Search reviews..."
+            placeholderTextColor={colors.secondaryText}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+      </View>
     );
   };
 
@@ -166,6 +185,21 @@ const styles = StyleSheet.create({
     width: windowWidth,
     // alignItems: 'center', // Center the content horizontally
   },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 40,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    marginHorizontal: 8,
+    marginBottom: 8,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 14,
+    fontFamily: 'Roboto-Regular',
+  },
   carouselContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -200,6 +234,11 @@ const styles = StyleSheet.create({
   specsTitleContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  list: {
+    paddingBottom: 20,
   },
 });
 

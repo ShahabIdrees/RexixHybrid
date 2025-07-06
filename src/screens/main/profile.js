@@ -27,11 +27,14 @@ import {
   List,
   Users,
   Bookmark,
+  MessageSquare,
 } from 'lucide-react-native';
+import {useNavigation} from '@react-navigation/native';
 
 const {width: screenWidth} = Dimensions.get('window');
 
 const Profile = ({route}) => {
+  const navigation = useNavigation();
   const [posts, setPosts] = useState(generateDummyPosts(10));
   const [activeTab, setActiveTab] = useState('posts');
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
@@ -189,237 +192,254 @@ const Profile = ({route}) => {
   };
 
   return (
-    <ScrollView
-      style={[styles.container, {backgroundColor: colors.primaryBG}]}
-      showsVerticalScrollIndicator={false}>
-      {/* Cover Photo */}
-      <View style={styles.coverPhotoContainer}>
-        <Image
-          source={{
-            uri: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxleHBsb3JlLWZlZWR8MXx8fGVufDB8fHx8&w=1000&q=80',
-          }}
-          style={styles.coverPhoto}
-        />
-        <TouchableOpacity
-          style={[styles.editCoverButton, {backgroundColor: colors.secondary}]}>
-          <Edit size={16} color={colors.primaryText} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Profile Info Section */}
-      <View
-        style={[
-          styles.profileInfoSection,
-          {backgroundColor: colors.secondary},
-        ]}>
-        {/* Profile Photo */}
-        <View style={styles.profilePhotoContainer}>
+    <View style={[styles.container, {backgroundColor: colors.primaryBG}]}>
+      <ScrollView
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}>
+        {/* Cover Photo */}
+        <View style={styles.coverPhotoContainer}>
           <Image
-            source={{uri: 'https://i.pravatar.cc/300?img=11'}}
-            style={styles.profilePhoto}
+            source={{
+              uri: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxleHBsb3JlLWZlZWR8MXx8fGVufDB8fHx8&w=1000&q=80',
+            }}
+            style={styles.coverPhoto}
           />
           <TouchableOpacity
             style={[
-              styles.editProfileButton,
-              {backgroundColor: colors.brandAccentColor},
+              styles.editCoverButton,
+              {backgroundColor: colors.secondary},
             ]}>
-            <Edit size={14} color="#FFFFFF" />
+            <Edit size={16} color={colors.primaryText} />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.nameContainer}>
-          <Text style={[styles.profileName, {color: colors.primaryText}]}>
-            Alexander Thompson
-          </Text>
-          <Text style={[styles.profileUsername, {color: colors.secondaryText}]}>
-            @alexthompson
-          </Text>
-        </View>
+        {/* Profile Info Section */}
+        <View
+          style={[
+            styles.profileInfoSection,
+            {backgroundColor: colors.secondary},
+          ]}>
+          {/* Profile Photo */}
+          <View style={styles.profilePhotoContainer}>
+            <Image
+              source={{uri: 'https://i.pravatar.cc/300?img=11'}}
+              style={styles.profilePhoto}
+            />
+            <TouchableOpacity
+              style={[
+                styles.editProfileButton,
+                {backgroundColor: colors.brandAccentColor},
+              ]}>
+              <Edit size={14} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.bioContainer}>
-          <Text style={[styles.bioText, {color: colors.primaryText}]}>
-            Product reviewer & tech enthusiast. Sharing honest opinions about
-            the latest gadgets and innovations.
-          </Text>
-        </View>
-
-        <View style={styles.profileDetailsContainer}>
-          <View style={styles.profileDetailItem}>
-            <MapPin size={16} color={colors.secondaryText} />
+          <View style={styles.nameContainer}>
+            <Text style={[styles.profileName, {color: colors.primaryText}]}>
+              Alexander Thompson
+            </Text>
             <Text
-              style={[styles.profileDetailText, {color: colors.secondaryText}]}>
-              San Francisco, CA
+              style={[styles.profileUsername, {color: colors.secondaryText}]}>
+              @alexthompson
             </Text>
           </View>
-          <View style={styles.profileDetailItem}>
-            <Calendar size={16} color={colors.secondaryText} />
+
+          <View style={styles.bioContainer}>
+            <Text style={[styles.bioText, {color: colors.primaryText}]}>
+              Product reviewer & tech enthusiast. Sharing honest opinions about
+              the latest gadgets and innovations.
+            </Text>
+          </View>
+
+          <View style={styles.profileDetailsContainer}>
+            <View style={styles.profileDetailItem}>
+              <MapPin size={16} color={colors.secondaryText} />
+              <Text
+                style={[
+                  styles.profileDetailText,
+                  {color: colors.secondaryText},
+                ]}>
+                San Francisco, CA
+              </Text>
+            </View>
+            <View style={styles.profileDetailItem}>
+              <Calendar size={16} color={colors.secondaryText} />
+              <Text
+                style={[
+                  styles.profileDetailText,
+                  {color: colors.secondaryText},
+                ]}>
+                Joined March 2022
+              </Text>
+            </View>
+            <View style={styles.profileDetailItem}>
+              <Link size={16} color={colors.secondaryText} />
+              <Text
+                style={[styles.profileDetailText, {color: colors.linkColor}]}>
+                techreviewer.com
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity
+              style={[
+                styles.primaryButton,
+                {backgroundColor: colors.brandAccentColor},
+              ]}>
+              <Text style={styles.primaryButtonText}>Follow</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.secondaryButton, {borderColor: colors.divider}]}>
+              <Mail size={18} color={colors.primaryText} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.secondaryButton, {borderColor: colors.divider}]}>
+              <Settings size={18} color={colors.primaryText} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Stats Section */}
+        <View
+          style={[styles.statsSection, {backgroundColor: colors.secondary}]}>
+          {dummyStats.map((stat, index) => (
+            <View
+              key={stat.id}
+              style={[
+                styles.statItem,
+                index < dummyStats.length - 1 && {
+                  borderRightWidth: 1,
+                  borderRightColor: colors.divider,
+                },
+              ]}>
+              <Text style={[styles.statCount, {color: colors.primaryText}]}>
+                {stat.count}
+              </Text>
+              <Text style={[styles.statTitle, {color: colors.secondaryText}]}>
+                {stat.title}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Tabs Section */}
+        <View
+          style={[
+            styles.tabsContainer,
+            {
+              backgroundColor: colors.secondary,
+              borderBottomColor: colors.divider,
+            },
+          ]}>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeTab === 'posts' && styles.activeTabButton,
+              activeTab === 'posts' && {
+                borderBottomColor: colors.brandAccentColor,
+              },
+            ]}
+            onPress={() => setActiveTab('posts')}>
+            <Grid
+              size={20}
+              color={
+                activeTab === 'posts'
+                  ? colors.brandAccentColor
+                  : colors.secondaryText
+              }
+            />
             <Text
-              style={[styles.profileDetailText, {color: colors.secondaryText}]}>
-              Joined March 2022
+              style={[
+                styles.tabText,
+                {
+                  color:
+                    activeTab === 'posts'
+                      ? colors.brandAccentColor
+                      : colors.secondaryText,
+                },
+              ]}>
+              Posts
             </Text>
-          </View>
-          <View style={styles.profileDetailItem}>
-            <Link size={16} color={colors.secondaryText} />
-            <Text style={[styles.profileDetailText, {color: colors.linkColor}]}>
-              techreviewer.com
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeTab === 'followers' && styles.activeTabButton,
+              activeTab === 'followers' && {
+                borderBottomColor: colors.brandAccentColor,
+              },
+            ]}
+            onPress={() => setActiveTab('followers')}>
+            <Users
+              size={20}
+              color={
+                activeTab === 'followers'
+                  ? colors.brandAccentColor
+                  : colors.secondaryText
+              }
+            />
+            <Text
+              style={[
+                styles.tabText,
+                {
+                  color:
+                    activeTab === 'followers'
+                      ? colors.brandAccentColor
+                      : colors.secondaryText,
+                },
+              ]}>
+              Followers
             </Text>
-          </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeTab === 'saved' && styles.activeTabButton,
+              activeTab === 'saved' && {
+                borderBottomColor: colors.brandAccentColor,
+              },
+            ]}
+            onPress={() => setActiveTab('saved')}>
+            <Bookmark
+              size={20}
+              color={
+                activeTab === 'saved'
+                  ? colors.brandAccentColor
+                  : colors.secondaryText
+              }
+            />
+            <Text
+              style={[
+                styles.tabText,
+                {
+                  color:
+                    activeTab === 'saved'
+                      ? colors.brandAccentColor
+                      : colors.secondaryText,
+                },
+              ]}>
+              Saved
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity
-            style={[
-              styles.primaryButton,
-              {backgroundColor: colors.brandAccentColor},
-            ]}>
-            <Text style={styles.primaryButtonText}>Follow</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.secondaryButton, {borderColor: colors.divider}]}>
-            <Mail size={18} color={colors.primaryText} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.secondaryButton, {borderColor: colors.divider}]}>
-            <Settings size={18} color={colors.primaryText} />
-          </TouchableOpacity>
+        {/* Tab Content */}
+        <View style={[styles.tabContent, {backgroundColor: colors.primaryBG}]}>
+          {renderTabContent()}
         </View>
-      </View>
-
-      {/* Stats Section */}
-      <View style={[styles.statsSection, {backgroundColor: colors.secondary}]}>
-        {dummyStats.map((stat, index) => (
-          <View
-            key={stat.id}
-            style={[
-              styles.statItem,
-              index < dummyStats.length - 1 && {
-                borderRightWidth: 1,
-                borderRightColor: colors.divider,
-              },
-            ]}>
-            <Text style={[styles.statCount, {color: colors.primaryText}]}>
-              {stat.count}
-            </Text>
-            <Text style={[styles.statTitle, {color: colors.secondaryText}]}>
-              {stat.title}
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Tabs Section */}
-      <View
-        style={[
-          styles.tabsContainer,
-          {
-            backgroundColor: colors.secondary,
-            borderBottomColor: colors.divider,
-          },
-        ]}>
-        <TouchableOpacity
-          style={[
-            styles.tabButton,
-            activeTab === 'posts' && styles.activeTabButton,
-            activeTab === 'posts' && {
-              borderBottomColor: colors.brandAccentColor,
-            },
-          ]}
-          onPress={() => setActiveTab('posts')}>
-          <Grid
-            size={20}
-            color={
-              activeTab === 'posts'
-                ? colors.brandAccentColor
-                : colors.secondaryText
-            }
-          />
-          <Text
-            style={[
-              styles.tabText,
-              {
-                color:
-                  activeTab === 'posts'
-                    ? colors.brandAccentColor
-                    : colors.secondaryText,
-              },
-            ]}>
-            Posts
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.tabButton,
-            activeTab === 'followers' && styles.activeTabButton,
-            activeTab === 'followers' && {
-              borderBottomColor: colors.brandAccentColor,
-            },
-          ]}
-          onPress={() => setActiveTab('followers')}>
-          <Users
-            size={20}
-            color={
-              activeTab === 'followers'
-                ? colors.brandAccentColor
-                : colors.secondaryText
-            }
-          />
-          <Text
-            style={[
-              styles.tabText,
-              {
-                color:
-                  activeTab === 'followers'
-                    ? colors.brandAccentColor
-                    : colors.secondaryText,
-              },
-            ]}>
-            Followers
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.tabButton,
-            activeTab === 'saved' && styles.activeTabButton,
-            activeTab === 'saved' && {
-              borderBottomColor: colors.brandAccentColor,
-            },
-          ]}
-          onPress={() => setActiveTab('saved')}>
-          <Bookmark
-            size={20}
-            color={
-              activeTab === 'saved'
-                ? colors.brandAccentColor
-                : colors.secondaryText
-            }
-          />
-          <Text
-            style={[
-              styles.tabText,
-              {
-                color:
-                  activeTab === 'saved'
-                    ? colors.brandAccentColor
-                    : colors.secondaryText,
-              },
-            ]}>
-            Saved
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Tab Content */}
-      <View style={[styles.tabContent, {backgroundColor: colors.primaryBG}]}>
-        {renderTabContent()}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  scrollContainer: {
     flex: 1,
   },
   coverPhotoContainer: {

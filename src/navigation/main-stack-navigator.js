@@ -12,6 +12,14 @@ import {
   Product,
   Brand,
   Comments,
+  SearchResults,
+  AllCategories,
+  AllProducts,
+  AllServices,
+  AllReviews,
+  CategoryProducts,
+  Chat,
+  NewMessage,
 } from '../screens/main';
 import {
   Login,
@@ -25,10 +33,11 @@ import {useTheme} from '../contexts/ThemeContext';
 import {
   Home as HomeIcon,
   Search as SearchIcon,
-  MessageSquare,
+  Plus,
   Bell,
-  User,
+  Settings as SettingsIcon,
 } from 'lucide-react-native';
+import {View} from 'react-native';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -74,12 +83,23 @@ const BottomTabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="MessagesTab"
-        component={Messages}
+        name="AddPostTab"
+        component={AddPost}
         options={{
-          tabBarLabel: 'Messages',
+          tabBarLabel: '',
           tabBarIcon: ({color, size}) => (
-            <MessageSquare size={size} color={color} />
+            <View
+              style={{
+                width: size + 16,
+                height: size + 16,
+                borderRadius: (size + 16) / 2,
+                backgroundColor: color,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 8,
+              }}>
+              <Plus size={size + 4} color="#FFFFFF" />
+            </View>
           ),
         }}
       />
@@ -92,11 +112,13 @@ const BottomTabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="ProfileTab"
-        component={Profile}
+        name="SettingsTab"
+        component={Settings}
         options={{
-          tabBarLabel: 'Profile',
-          tabBarIcon: ({color, size}) => <User size={size} color={color} />,
+          tabBarLabel: 'Settings',
+          tabBarIcon: ({color, size}) => (
+            <SettingsIcon size={size} color={color} />
+          ),
         }}
       />
     </Tab.Navigator>
@@ -130,14 +152,19 @@ const MainStackNavigator = () => {
       <Stack.Screen name="Settings" component={Settings} />
       <Stack.Screen name="Comments" component={Comments} />
       <Stack.Screen name="Profile" component={Profile} />
+      <Stack.Screen name="Messages" component={Messages} />
+      <Stack.Screen name="Chat" component={Chat} />
+      <Stack.Screen name="NewMessage" component={NewMessage} />
 
-      {/* New Screens for Explore Navigation */}
-      <Stack.Screen name="SearchResults" component={ExploreScreen} />
-      <Stack.Screen name="AllCategories" component={ExploreScreen} />
-      <Stack.Screen name="CategoryProducts" component={ExploreScreen} />
-      <Stack.Screen name="AllProducts" component={ExploreScreen} />
-      <Stack.Screen name="AllServices" component={ExploreScreen} />
-      <Stack.Screen name="AllReviews" component={ExploreScreen} />
+      {/* Search Results Screen */}
+      <Stack.Screen name="SearchResults" component={SearchResults} />
+
+      {/* Category and List Screens */}
+      <Stack.Screen name="AllCategories" component={AllCategories} />
+      <Stack.Screen name="CategoryProducts" component={CategoryProducts} />
+      <Stack.Screen name="AllProducts" component={AllProducts} />
+      <Stack.Screen name="AllServices" component={AllServices} />
+      <Stack.Screen name="AllReviews" component={AllReviews} />
     </Stack.Navigator>
   );
 };
