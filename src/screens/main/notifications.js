@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useCallback} from 'react';
 import {
   StyleSheet,
   View,
@@ -8,126 +8,263 @@ import {
   Image,
   FlatList,
 } from 'react-native';
-import {useAppColors} from '../../utils/colors';
-import {useCommonStyles} from '../../common-styling/theme-styling';
+import {useTheme} from '../../contexts/ThemeContext';
 import {useNavigation} from '@react-navigation/native';
-import {MessageSquare, Bell, User} from 'lucide-react-native';
+import {
+  MessageCircle,
+  Heart,
+  UserPlus,
+  Star,
+  Package,
+  AtSign,
+  Mail,
+  UserCircle2,
+} from 'lucide-react-native';
 
 const Notifications = () => {
   const navigation = useNavigation();
-  const commonStyles = useCommonStyles();
-  const colors = useAppColors();
-
-  // Mock notifications data
-  const notifications = [
+  const {colors, actualTheme} = useTheme();
+  const [notifications, setNotifications] = useState([
     {
       id: '1',
       type: 'like',
-      message: 'John D. liked your review on Sony WH-1000XM4',
-      time: '2 minutes ago',
+      userName: 'John D.',
+      userAvatar: 'https://i.pravatar.cc/100?img=12',
+      message: 'liked your review on Sony WH-1000XM4',
+      time: '2m ago',
       isRead: false,
+      targetType: 'post',
+      targetId: 'post_1',
+      preview: '“Noise cancellation is top-notch, especially in busy offices.”',
     },
     {
       id: '2',
       type: 'comment',
-      message: 'Sarah M. commented on your review',
-      time: '5 minutes ago',
+      userName: 'Sarah M.',
+      userAvatar: 'https://i.pravatar.cc/100?img=23',
+      message: 'commented on your review',
+      time: '5m ago',
       isRead: false,
+      targetType: 'comments',
+      targetId: 'post_2',
+      preview: '“I had a similar experience with the battery life…”',
     },
     {
       id: '3',
-      type: 'follow',
-      message: 'Mike R. started following you',
-      time: '1 hour ago',
-      isRead: true,
+      type: 'reply',
+      userName: 'Alex K.',
+      userAvatar: 'https://i.pravatar.cc/100?img=34',
+      message: 'replied to your comment',
+      time: '15m ago',
+      isRead: false,
+      targetType: 'comments',
+      targetId: 'post_3',
+      preview: '“Totally agree on the camera sharpness!”',
     },
     {
       id: '4',
-      type: 'product',
-      message: 'New review for iPhone 15 Pro Max is trending',
-      time: '2 hours ago',
+      type: 'follow',
+      userName: 'Mike R.',
+      userAvatar: 'https://i.pravatar.cc/100?img=45',
+      message: 'started following you',
+      time: '1h ago',
       isRead: true,
+      targetType: 'profile',
+      targetId: 'user_4',
     },
     {
       id: '5',
-      type: 'service',
-      message: 'Car Detailing Pro has a new offer',
-      time: '3 hours ago',
+      type: 'mention',
+      userName: 'Emma W.',
+      userAvatar: 'https://i.pravatar.cc/100?img=56',
+      message: 'mentioned you in a comment',
+      time: '2h ago',
       isRead: true,
+      targetType: 'comments',
+      targetId: 'post_5',
+      preview: '“@you what did you think about the latest update?”',
     },
-  ];
+    {
+      id: '6',
+      type: 'product',
+      userName: 'Rexix',
+      userAvatar: null,
+      message: 'New review for iPhone 15 Pro Max is trending',
+      time: '3h ago',
+      isRead: true,
+      targetType: 'post',
+      targetId: 'post_iphone15_review_trending',
+      preview: '“Battery life is stellar, and the camera is a beast.”',
+    },
+    {
+      id: '7',
+      type: 'brand',
+      userName: 'Rexix',
+      userAvatar: null,
+      message: 'Sony has a new product available',
+      time: '5h ago',
+      isRead: true,
+      targetType: 'product',
+      targetId: 'product_sony_new',
+      preview: 'Check specs, price, and early hands-on impressions.',
+    },
+  ]);
 
-  const renderNotification = ({item}) => (
-    <TouchableOpacity
-      style={[
-        styles.notificationItem,
-        {
-          backgroundColor: item.isRead ? colors.primaryBG : colors.secondary,
-          borderLeftColor: item.isRead
-            ? 'transparent'
-            : colors.brandAccentColor,
-        },
-      ]}>
-      <View style={styles.notificationContent}>
-        <Text
-          style={[
-            styles.notificationText,
-            {
-              color: colors.primaryText,
-              fontWeight: item.isRead ? 'normal' : '600',
-            },
-          ]}>
-          {item.message}
-        </Text>
-        <Text style={[styles.notificationTime, {color: colors.secondaryText}]}>
-          {item.time}
-        </Text>
-      </View>
-      {!item.isRead && (
-        <View
-          style={[styles.unreadDot, {backgroundColor: colors.brandAccentColor}]}
-        />
-      )}
-    </TouchableOpacity>
+  const getNotificationIcon = type => {
+    const iconProps = {
+      size: 20,
+      color: colors.brandAccentColor,
+      strokeWidth: 2,
+    };
+
+    switch (type) {
+      case 'like':
+        return <Heart {...iconProps} fill={colors.brandAccentColor} />;
+      case 'comment':
+      case 'reply':
+        return <MessageCircle {...iconProps} />;
+      case 'follow':
+        return <UserPlus {...iconProps} />;
+      case 'mention':
+        return <AtSign {...iconProps} />;
+      case 'product':
+      case 'brand':
+        return <Package {...iconProps} />;
+      default:
+        return <Star {...iconProps} />;
+    }
+  };
+
+  const handleNotificationPress = useCallback(
+    notification => {
+      // Mark as read
+      setNotifications(prev =>
+        prev.map(n => (n.id === notification.id ? {...n, isRead: true} : n)),
+      );
+
+      // Navigate based on type
+      switch (notification.targetType) {
+        case 'post':
+          navigation.navigate('Comments', {
+            postId: notification.targetId,
+            title: 'Review',
+            content: 'Post content',
+          });
+          break;
+        case 'comments':
+          navigation.navigate('Comments', {
+            postId: notification.targetId,
+            title: 'Comments',
+            content: 'Comment thread',
+          });
+          break;
+        case 'profile':
+          navigation.navigate('Profile', {userId: notification.targetId});
+          break;
+        case 'product':
+          navigation.navigate('Product', {productId: notification.targetId});
+          break;
+        case 'brand':
+          navigation.navigate('Brand', {brandId: notification.targetId});
+          break;
+        default:
+          break;
+      }
+    },
+    [navigation],
   );
+
+  const markAllAsRead = useCallback(() => {
+    setNotifications(prev => prev.map(n => ({...n, isRead: true})));
+  }, []);
+
+  const renderNotification = useCallback(
+    ({item}) => (
+      <TouchableOpacity
+        style={[
+          styles.notificationItem,
+          {
+            backgroundColor: item.isRead ? colors.primaryBG : colors.secondary,
+          },
+        ]}
+        onPress={() => handleNotificationPress(item)}
+        activeOpacity={0.7}>
+        {/* Avatar or Icon */}
+        <View
+          style={[styles.avatarContainer, {backgroundColor: colors.secondary}]}>
+          {item.userAvatar ? (
+            <Image
+              source={{uri: item.userAvatar}}
+              style={styles.avatar}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.iconContainer}>
+              {getNotificationIcon(item.type)}
+            </View>
+          )}
+        </View>
+
+        {/* Content */}
+        <View style={styles.notificationContent}>
+          <Text style={[styles.notificationText, {color: colors.primaryText}]}>
+            <Text style={styles.userName}>{item.userName}</Text> {item.message}
+          </Text>
+          {item.preview ? (
+            <Text
+              style={[
+                styles.notificationPreview,
+                {color: colors.secondaryText},
+              ]}
+              numberOfLines={1}>
+              {item.preview}
+            </Text>
+          ) : null}
+          <Text
+            style={[styles.notificationTime, {color: colors.secondaryText}]}>
+            {item.time}
+          </Text>
+        </View>
+
+        {/* Unread indicator */}
+        {!item.isRead && (
+          <View
+            style={[
+              styles.unreadDot,
+              {backgroundColor: colors.brandAccentColor},
+            ]}
+          />
+        )}
+      </TouchableOpacity>
+    ),
+    [colors, handleNotificationPress, getNotificationIcon],
+  );
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
     <SafeAreaView
       style={[styles.container, {backgroundColor: colors.primaryBG}]}>
-      {/* Header */}
-      <View style={[styles.header, {backgroundColor: colors.primaryBG}]}>
-        <Text style={[styles.headerText, {color: colors.brandAccentColor}]}>
-          Rexix
-        </Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => {
-              navigation.navigate('Messages');
-            }}>
-            <MessageSquare size={24} color={colors.brandAccentColor} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => {
-              navigation.navigate('Profile');
-            }}>
-            <User size={24} color={colors.brandAccentColor} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {/* Notifications List */}
       <View style={styles.content}>
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, {color: colors.primaryText}]}>
-            Notifications
-          </Text>
-          <TouchableOpacity>
-            <Text style={[styles.markAllRead, {color: colors.linkColor}]}>
-              Mark all read
+          <View>
+            <Text style={[styles.sectionTitle, {color: colors.primaryText}]}>
+              Notifications
             </Text>
-          </TouchableOpacity>
+            {unreadCount > 0 && (
+              <Text style={[styles.unreadCount, {color: colors.secondaryText}]}>
+                {unreadCount} unread
+              </Text>
+            )}
+          </View>
+          {unreadCount > 0 && (
+            <TouchableOpacity onPress={markAllAsRead}>
+              <Text style={[styles.markAllRead, {color: colors.linkColor}]}>
+                Mark all read
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <FlatList
@@ -136,6 +273,9 @@ const Notifications = () => {
           keyExtractor={item => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.notificationsList}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
         />
       </View>
     </SafeAreaView>
@@ -153,11 +293,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
   },
   headerText: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Roboto-Bold',
   },
   headerActions: {
     flexDirection: 'row',
@@ -176,43 +315,75 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 16,
+    paddingHorizontal: 4,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontFamily: 'Roboto-Bold',
+    marginBottom: 2,
+  },
+  unreadCount: {
+    fontSize: 13,
+    fontFamily: 'Roboto-Regular',
   },
   markAllRead: {
     fontSize: 14,
     fontFamily: 'Roboto-Medium',
   },
   notificationsList: {
-    paddingBottom: 20,
+    paddingBottom: 100,
   },
   notificationItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    marginBottom: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginBottom: 4,
     borderRadius: 12,
-    borderLeftWidth: 4,
+  },
+  avatarContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginRight: 12,
+    overflow: 'hidden',
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
+  },
+  iconContainer: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   notificationContent: {
     flex: 1,
   },
   notificationText: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: 'Roboto-Regular',
+    lineHeight: 20,
     marginBottom: 4,
   },
-  notificationTime: {
+  notificationPreview: {
     fontSize: 13,
+    fontFamily: 'Roboto-Regular',
+    opacity: 0.8,
+    marginBottom: 2,
+  },
+  userName: {
+    fontFamily: 'Roboto-Medium',
+  },
+  notificationTime: {
+    fontSize: 12,
     fontFamily: 'Roboto-Regular',
   },
   unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     marginLeft: 12,
   },
 });

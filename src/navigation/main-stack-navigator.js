@@ -37,7 +37,7 @@ import {
   Bell,
   Settings as SettingsIcon,
 } from 'lucide-react-native';
-import {View} from 'react-native';
+import {View, Platform, TouchableOpacity} from 'react-native';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -50,18 +50,32 @@ const BottomTabNavigator = () => {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        lazy: true,
         tabBarStyle: {
-          backgroundColor: colors.primaryBG,
-          borderTopColor: colors.borderColor,
-          paddingTop: 10,
-          height: 60,
+          backgroundColor: colors.secondaryBG,
+          borderTopWidth: 1,
+          borderTopColor: colors.secondaryBG,
+          paddingTop: 8,
+          borderTopEndRadius: 8,
+          borderTopStartRadius: 8,
+          elevation: 8,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+          height: Platform.OS === 'ios' ? 88 : 72,
+          elevation: 8,
+          shadowColor: colors.shadowColor,
+          shadowOffset: {width: 0, height: -2},
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
         },
         tabBarActiveTintColor: colors.brandAccentColor,
         tabBarInactiveTintColor: colors.secondaryText,
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontFamily: 'Roboto-Medium',
-          paddingBottom: 5,
+          marginTop: 4,
+        },
+        tabBarIconStyle: {
+          marginTop: 2,
         },
       }}>
       <Tab.Screen
@@ -69,7 +83,13 @@ const BottomTabNavigator = () => {
         component={Home}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({color, size}) => <HomeIcon size={size} color={color} />,
+          tabBarIcon: ({color, size, focused}) => (
+            <HomeIcon
+              size={focused ? 24 : 22}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
+          ),
         }}
       />
       <Tab.Screen
@@ -77,8 +97,12 @@ const BottomTabNavigator = () => {
         component={ExploreScreen}
         options={{
           tabBarLabel: 'Explore',
-          tabBarIcon: ({color, size}) => (
-            <SearchIcon size={size} color={color} />
+          tabBarIcon: ({color, size, focused}) => (
+            <SearchIcon
+              size={focused ? 24 : 22}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
           ),
         }}
       />
@@ -87,19 +111,36 @@ const BottomTabNavigator = () => {
         component={AddPost}
         options={{
           tabBarLabel: '',
-          tabBarIcon: ({color, size}) => (
-            <View
+          tabBarButton: props => (
+            <TouchableOpacity
               style={{
-                width: size + 16,
-                height: size + 16,
-                borderRadius: (size + 16) / 2,
-                backgroundColor: color,
+                flex: 1,
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginBottom: 8,
-              }}>
-              <Plus size={size + 4} color="#FFFFFF" />
-            </View>
+                position: 'relative',
+              }}
+              onPress={props.onPress}
+              activeOpacity={0.8}>
+              <View
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
+                  backgroundColor: colors.brandAccentColor,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginTop: -12,
+                  shadowColor: colors.brandAccentColor,
+                  shadowOffset: {width: 0, height: 4},
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 8,
+                  borderWidth: 4,
+                  borderColor: colors.primaryBG,
+                }}>
+                <Plus size={26} color="#FFFFFF" strokeWidth={3} />
+              </View>
+            </TouchableOpacity>
           ),
         }}
       />
@@ -108,7 +149,13 @@ const BottomTabNavigator = () => {
         component={Notifications}
         options={{
           tabBarLabel: 'Notifications',
-          tabBarIcon: ({color, size}) => <Bell size={size} color={color} />,
+          tabBarIcon: ({color, size, focused}) => (
+            <Bell
+              size={focused ? 24 : 22}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
+          ),
         }}
       />
       <Tab.Screen
@@ -116,8 +163,12 @@ const BottomTabNavigator = () => {
         component={Settings}
         options={{
           tabBarLabel: 'Settings',
-          tabBarIcon: ({color, size}) => (
-            <SettingsIcon size={size} color={color} />
+          tabBarIcon: ({color, size, focused}) => (
+            <SettingsIcon
+              size={focused ? 24 : 22}
+              color={color}
+              strokeWidth={focused ? 2.5 : 2}
+            />
           ),
         }}
       />
@@ -135,6 +186,8 @@ const MainStackNavigator = () => {
       screenOptions={{
         headerShown: false,
         contentStyle: {backgroundColor: colors.primaryBG},
+        animation: 'default',
+        animationDuration: 200,
       }}>
       {/* Auth Screens */}
       <Stack.Screen name="Login" component={Login} />
@@ -146,25 +199,77 @@ const MainStackNavigator = () => {
 
       {/* Main App Screens */}
       <Stack.Screen name="Home" component={BottomTabNavigator} />
-      <Stack.Screen name="AddPost" component={AddPost} />
-      <Stack.Screen name="Product" component={Product} />
-      <Stack.Screen name="Brand" component={Brand} />
+      <Stack.Screen
+        name="AddPost"
+        component={AddPost}
+        options={{animation: 'slide_from_bottom'}}
+      />
+      <Stack.Screen
+        name="Product"
+        component={Product}
+        options={{animation: 'slide_from_right'}}
+      />
+      <Stack.Screen
+        name="Brand"
+        component={Brand}
+        options={{animation: 'slide_from_right'}}
+      />
       <Stack.Screen name="Settings" component={Settings} />
-      <Stack.Screen name="Comments" component={Comments} />
-      <Stack.Screen name="Profile" component={Profile} />
+      <Stack.Screen
+        name="Comments"
+        component={Comments}
+        options={{animation: 'slide_from_bottom'}}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={Profile}
+        options={{animation: 'slide_from_right'}}
+      />
       <Stack.Screen name="Messages" component={Messages} />
-      <Stack.Screen name="Chat" component={Chat} />
-      <Stack.Screen name="NewMessage" component={NewMessage} />
+      <Stack.Screen
+        name="Chat"
+        component={Chat}
+        options={{animation: 'slide_from_right'}}
+      />
+      <Stack.Screen
+        name="NewMessage"
+        component={NewMessage}
+        options={{animation: 'slide_from_bottom'}}
+      />
 
       {/* Search Results Screen */}
-      <Stack.Screen name="SearchResults" component={SearchResults} />
+      <Stack.Screen
+        name="SearchResults"
+        component={SearchResults}
+        options={{animation: 'slide_from_right'}}
+      />
 
       {/* Category and List Screens */}
-      <Stack.Screen name="AllCategories" component={AllCategories} />
-      <Stack.Screen name="CategoryProducts" component={CategoryProducts} />
-      <Stack.Screen name="AllProducts" component={AllProducts} />
-      <Stack.Screen name="AllServices" component={AllServices} />
-      <Stack.Screen name="AllReviews" component={AllReviews} />
+      <Stack.Screen
+        name="AllCategories"
+        component={AllCategories}
+        options={{animation: 'slide_from_right'}}
+      />
+      <Stack.Screen
+        name="CategoryProducts"
+        component={CategoryProducts}
+        options={{animation: 'slide_from_right'}}
+      />
+      <Stack.Screen
+        name="AllProducts"
+        component={AllProducts}
+        options={{animation: 'slide_from_right'}}
+      />
+      <Stack.Screen
+        name="AllServices"
+        component={AllServices}
+        options={{animation: 'slide_from_right'}}
+      />
+      <Stack.Screen
+        name="AllReviews"
+        component={AllReviews}
+        options={{animation: 'slide_from_right'}}
+      />
     </Stack.Navigator>
   );
 };

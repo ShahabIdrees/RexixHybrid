@@ -14,7 +14,18 @@ const ServicesTab = () => {
   const renderServiceItem = ({item}) => (
     <View style={[styles.serviceItem, {backgroundColor: colors.secondary}]}>
       {/* Service Image */}
-      <Image source={{uri: item.image}} style={styles.serviceImage} />
+      <Image
+        source={
+          typeof item.image === 'number'
+            ? item.image
+            : typeof item.image === 'string'
+            ? {uri: item.image}
+            : item.image?.uri
+            ? {uri: item.image.uri}
+            : null
+        }
+        style={styles.serviceImage}
+      />
 
       {/* Service Info */}
       <View style={styles.serviceInfo}>

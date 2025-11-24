@@ -1,5 +1,5 @@
 // Explore.js (formerly Search.js)
-import React, {useState} from 'react';
+import React, {useState, useCallback, useMemo} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -10,27 +10,28 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
-  Dimensions,
 } from 'react-native';
 import {useAppColors} from '../../utils/colors';
-import {useCommonStyles} from '../../common-styling/theme-styling';
 import {useNavigation} from '@react-navigation/native';
 import {
   Search,
   ChevronRight,
   Star,
-  MessageSquare,
-  User,
 } from 'lucide-react-native';
-
-const {width} = Dimensions.get('window');
-const cardWidth = (width - 48) / 2;
 
 const ExploreScreen = () => {
   const navigation = useNavigation();
-  const commonStyles = useCommonStyles();
   const colors = useAppColors();
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState('All');
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [recentSearches, setRecentSearches] = useState([
+    {id: 'search_1', query: 'Sony WH-1000XM4'},
+    {id: 'search_2', query: 'iPhone 15 Pro'},
+    {id: 'search_3', query: 'Tesla Model 3'},
+    {id: 'search_4', query: 'Samsung QLED TV'},
+    {id: 'search_5', query: 'Car detailing'},
+  ]);
 
   // Mock data for categories
   const categories = [
@@ -183,43 +184,81 @@ const ExploreScreen = () => {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      navigation.navigate('SearchResults', {query: searchQuery.trim()});
+      navigation.navigate('SearchResults', {
+        query: searchQuery.trim(),
+        filter: activeFilter,
+      });
     }
   };
 
   const handleSearchSubmit = () => {
     handleSearch();
+    setIsSearchActive(false);
   };
 
-  const navigateToCategory = category => {
-    navigation.navigate('CategoryProducts', {category});
+  const handleSearchFocus = () => {
+    setIsSearchActive(true);
   };
 
-  const navigateToAllCategories = () => {
+  const handleSearchBlur = () => {
+    if (!searchQuery.trim()) {
+      setIsSearchActive(false);
+    }
+  };
+
+  const handleRecentSearchPress = useCallback(
+    query => {
+      setSearchQuery(query);
+      navigation.navigate('SearchResults', {
+        query: query,
+        filter: activeFilter,
+      });
+    },
+    [activeFilter, navigation],
+  );
+
+  const clearRecentSearch = useCallback(id => {
+    setRecentSearches(prev => prev.filter(item => item.id !== id));
+  }, []);
+
+
+  const navigateToCategory = useCallback(
+    category => {
+      navigation.navigate('CategoryProducts', {category});
+    },
+    [navigation],
+  );
+
+  const navigateToAllCategories = useCallback(() => {
     navigation.navigate('AllCategories');
-  };
+  }, [navigation]);
 
-  const navigateToProduct = product => {
-    navigation.navigate('Product', {productId: product.id});
-  };
+  const navigateToProduct = useCallback(
+    product => {
+      navigation.navigate('Product', {productId: product.id});
+    },
+    [navigation],
+  );
 
-  const navigateToService = service => {
-    navigation.navigate('Product', {productId: service.id, isService: true});
-  };
+  const navigateToComments = useCallback(
+    review => {
+      navigation.navigate('Comments', {
+        postId: review.id,
+        title: review.productName,
+        content: review.content,
+      });
+    },
+    [navigation],
+  );
 
-  const navigateToComments = review => {
-    navigation.navigate('Comments', {
-      postId: review.id,
-      title: review.productName,
-      content: review.content,
-    });
-  };
+  const navigateToProfile = useCallback(
+    userId => {
+      navigation.navigate('Profile', {userId});
+    },
+    [navigation],
+  );
 
-  const navigateToProfile = userId => {
-    navigation.navigate('Profile', {userId});
-  };
-
-  const renderCategoryItem = ({item}) => (
+  const renderCategoryItem = useCallback(({item}) => (
     <TouchableOpacity
       style={[styles.categoryItem, {backgroundColor: item.color + '20'}]}
       onPress={() => navigateToCategory(item)}>
@@ -231,9 +270,9 @@ const ExploreScreen = () => {
         {item.name}
       </Text>
     </TouchableOpacity>
-  );
+  ), [colors, navigateToCategory]);
 
-  const renderProductItem = ({item}) => (
+  const renderProductItem = useCallback(({item}) => (
     <TouchableOpacity
       style={[styles.productCard, {backgroundColor: colors.secondary}]}
       onPress={() => navigateToProduct(item)}>
@@ -259,9 +298,9 @@ const ExploreScreen = () => {
         </Text>
       </View>
     </TouchableOpacity>
-  );
+  ), [colors, navigateToProduct]);
 
-  const renderReviewItem = ({item}) => (
+  const renderReviewItem = useCallback(({item}) => (
     <TouchableOpacity
       style={[styles.reviewCard, {backgroundColor: colors.secondary}]}
       onPress={() => navigateToComments(item)}>
@@ -304,159 +343,203 @@ const ExploreScreen = () => {
         </Text>
       </View>
     </TouchableOpacity>
+  ), [colors, navigateToComments, navigateToProfile]);
+
+  const recentSearchesComponent = useMemo(
+    () => (
+      <View style={styles.recentSearchesContainer}>
+        <Text style={[styles.recentSearchesTitle, {color: colors.primaryText}]}>
+          Recent Searches
+        </Text>
+        {recentSearches.map(item => (
+          <TouchableOpacity
+            key={item.id}
+            style={[
+              styles.recentSearchItem,
+              {borderBottomColor: colors.divider},
+            ]}
+            onPress={() => handleRecentSearchPress(item.query)}>
+            <Search size={16} color={colors.secondaryText} strokeWidth={2} />
+            <Text
+              style={[styles.recentSearchText, {color: colors.primaryText}]}>
+              {item.query}
+            </Text>
+            <TouchableOpacity
+              style={styles.clearSearchButton}
+              onPress={() => clearRecentSearch(item.id)}>
+              <Text
+                style={[styles.clearSearchText, {color: colors.secondaryText}]}>
+                ×
+              </Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        ))}
+      </View>
+    ),
+    [recentSearches, colors, handleRecentSearchPress, clearRecentSearch],
   );
 
   return (
     <SafeAreaView
       style={[styles.container, {backgroundColor: colors.primaryBG}]}>
-      {/* Header */}
-      <View style={[styles.header, {backgroundColor: colors.primaryBG}]}>
-        <Text style={[styles.headerText, {color: colors.brandAccentColor}]}>
-          Rexix
-        </Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => {
-              navigation.navigate('Messages');
-            }}>
-            <MessageSquare size={24} color={colors.brandAccentColor} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => {
-              navigation.navigate('Profile');
-            }}>
-            <User size={24} color={colors.brandAccentColor} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {/* Search Bar */}
-      <View style={[styles.searchBar, {backgroundColor: colors.secondary}]}>
-        <Search size={20} color={colors.secondaryText} />
-        <TextInput
-          style={[styles.searchInput, {color: colors.primaryText}]}
-          placeholder="Search products, services, brands..."
-          placeholderTextColor={colors.secondaryText}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onSubmitEditing={handleSearchSubmit}
-          returnKeyType="search"
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
-            <Text
-              style={[
-                styles.searchButtonText,
-                {color: colors.brandAccentColor},
-              ]}>
-              Search
-            </Text>
-          </TouchableOpacity>
-        )}
+      <View style={styles.searchContainer}>
+        <View style={[styles.searchBar, {backgroundColor: colors.secondary}]}>
+          <Search size={20} color={colors.secondaryText} strokeWidth={2} />
+          <TextInput
+            style={[styles.searchInput, {color: colors.primaryText}]}
+            placeholder="Search products, services, brands..."
+            placeholderTextColor={colors.secondaryText}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearchSubmit}
+            onFocus={handleSearchFocus}
+            onBlur={handleSearchBlur}
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={handleSearch}
+              style={styles.searchButton}>
+              <Text
+                style={[
+                  styles.searchButtonText,
+                  {color: colors.brandAccentColor},
+                ]}>
+                Search
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
-      <ScrollView
-        style={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}>
-        {/* Categories Section */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, {color: colors.primaryText}]}>
-              Top Categories
-            </Text>
-            <TouchableOpacity
-              style={styles.viewAllButton}
-              onPress={navigateToAllCategories}>
-              <Text style={[styles.viewAllText, {color: colors.linkColor}]}>
-                View All
+      {/* Show recent searches or content */}
+      {isSearchActive && searchQuery.length === 0 ? (
+        recentSearchesComponent
+      ) : isSearchActive && searchQuery.length > 0 ? (
+        <View style={styles.searchResultsContainer}>
+          <Text style={[styles.searchingText, {color: colors.secondaryText}]}>
+            Press search to see results for "{searchQuery}"
+          </Text>
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}>
+          {/* Categories Section */}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, {color: colors.primaryText}]}>
+                Top Categories
               </Text>
-              <ChevronRight size={16} color={colors.linkColor} />
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.viewAllButton}
+                onPress={navigateToAllCategories}>
+                <Text style={[styles.viewAllText, {color: colors.linkColor}]}>
+                  View All
+                </Text>
+                <ChevronRight size={16} color={colors.linkColor} />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={categories.slice(0, 6)}
+              renderItem={renderCategoryItem}
+              keyExtractor={item => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesContainer}
+              initialNumToRender={4}
+              maxToRenderPerBatch={4}
+              windowSize={3}
+            />
           </View>
 
-          <FlatList
-            data={categories.slice(0, 6)}
-            renderItem={renderCategoryItem}
-            keyExtractor={item => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesContainer}
-          />
-        </View>
-
-        {/* Top Products Section */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, {color: colors.primaryText}]}>
-              Top Products
-            </Text>
-            <TouchableOpacity
-              style={styles.viewAllButton}
-              onPress={() => navigation.navigate('AllProducts')}>
-              <Text style={[styles.viewAllText, {color: colors.linkColor}]}>
-                View All
+          {/* Top Products Section */}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, {color: colors.primaryText}]}>
+                Top Products
               </Text>
-              <ChevronRight size={16} color={colors.linkColor} />
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.viewAllButton}
+                onPress={() => navigation.navigate('AllProducts')}>
+                <Text style={[styles.viewAllText, {color: colors.linkColor}]}>
+                  View All
+                </Text>
+                <ChevronRight size={16} color={colors.linkColor} />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={topProducts}
+              renderItem={renderProductItem}
+              keyExtractor={item => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.productsContainer}
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
+              windowSize={3}
+              removeClippedSubviews={true}
+            />
           </View>
 
-          <FlatList
-            data={topProducts}
-            renderItem={renderProductItem}
-            keyExtractor={item => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.productsContainer}
-          />
-        </View>
-
-        {/* Top Services Section */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, {color: colors.primaryText}]}>
-              Top Services
-            </Text>
-            <TouchableOpacity
-              style={styles.viewAllButton}
-              onPress={() => navigation.navigate('AllServices')}>
-              <Text style={[styles.viewAllText, {color: colors.linkColor}]}>
-                View All
+          {/* Top Services Section */}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, {color: colors.primaryText}]}>
+                Top Services
               </Text>
-              <ChevronRight size={16} color={colors.linkColor} />
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.viewAllButton}
+                onPress={() => navigation.navigate('AllServices')}>
+                <Text style={[styles.viewAllText, {color: colors.linkColor}]}>
+                  View All
+                </Text>
+                <ChevronRight size={16} color={colors.linkColor} />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={topServices}
+              renderItem={renderProductItem}
+              keyExtractor={item => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.productsContainer}
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
+              windowSize={3}
+              removeClippedSubviews={true}
+            />
           </View>
 
-          <FlatList
-            data={topServices}
-            renderItem={renderProductItem}
-            keyExtractor={item => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.productsContainer}
-          />
-        </View>
-
-        {/* Top Reviews Section */}
-        <View style={[styles.sectionContainer, {marginBottom: 20}]}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, {color: colors.primaryText}]}>
-              Top Reviews
-            </Text>
-            <TouchableOpacity
-              style={styles.viewAllButton}
-              onPress={() => navigation.navigate('AllReviews')}>
-              <Text style={[styles.viewAllText, {color: colors.linkColor}]}>
-                View All
+          {/* Top Reviews Section */}
+          <View style={[styles.sectionContainer, {marginBottom: 20}]}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, {color: colors.primaryText}]}>
+                Top Reviews
               </Text>
-              <ChevronRight size={16} color={colors.linkColor} />
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                style={styles.viewAllButton}
+                onPress={() => navigation.navigate('AllReviews')}>
+                <Text style={[styles.viewAllText, {color: colors.linkColor}]}>
+                  View All
+                </Text>
+                <ChevronRight size={16} color={colors.linkColor} />
+              </TouchableOpacity>
+            </View>
 
-          {topReviews.map(review => renderReviewItem({item: review}))}
-        </View>
-      </ScrollView>
+            <FlatList
+              data={topReviews}
+              renderItem={renderReviewItem}
+              keyExtractor={item => item.id}
+              scrollEnabled={false}
+            />
+          </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -486,15 +569,21 @@ const styles = StyleSheet.create({
   headerButton: {
     padding: 4,
   },
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 48,
-    borderRadius: 24,
+    height: 50,
+    borderRadius: 25,
     paddingHorizontal: 16,
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 8,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   searchInput: {
     flex: 1,
@@ -503,10 +592,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Roboto-Regular',
   },
   searchButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 18,
     backgroundColor: 'rgba(176, 8, 20, 0.1)',
+    marginLeft: 8,
   },
   searchButtonText: {
     fontSize: 14,
@@ -514,6 +604,45 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
+  },
+  recentSearchesContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  recentSearchesTitle: {
+    fontSize: 16,
+    fontFamily: 'Roboto-Medium',
+    marginBottom: 12,
+  },
+  recentSearchItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  recentSearchText: {
+    fontSize: 15,
+    fontFamily: 'Roboto-Regular',
+    marginLeft: 12,
+    flex: 1,
+  },
+  clearSearchButton: {
+    padding: 4,
+  },
+  clearSearchText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  searchResultsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  searchingText: {
+    fontSize: 16,
+    fontFamily: 'Roboto-Regular',
+    textAlign: 'center',
   },
   sectionContainer: {
     marginTop: 24,
@@ -649,6 +778,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Roboto-Regular',
     marginRight: 16,
+  },
+  filtersContainer: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    marginHorizontal: 16,
+  },
+  filtersScrollContainer: {
+    paddingHorizontal: 4,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginHorizontal: 4,
+    minWidth: 70,
+    alignItems: 'center',
+  },
+  filterText: {
+    fontSize: 14,
+    fontFamily: 'Roboto-Medium',
   },
 });
 

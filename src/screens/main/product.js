@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useRef, useCallback, useMemo} from 'react';
 import {
   Image,
   StyleSheet,
@@ -11,21 +11,31 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
-import Carousel from 'react-native-reanimated-carousel';
 import {useCommonStyles} from '../../common-styling/theme-styling';
 import {ReviewPost, StatsComponent} from '../../components';
 import {useAppColors} from '../../utils/colors';
 import {generateDummyPosts} from '../../utils/helper-functions';
-import {Search} from 'lucide-react-native';
+import {Search, ChevronLeft, Star} from 'lucide-react-native';
+import {productImages} from '../../assets/images';
 
 // Get the window dimensions
-const {width: windowWidth} = Dimensions.get('window');
+const {width: windowWidth, height: windowHeight} = Dimensions.get('window');
 
 const Product = ({navigation}) => {
   const [posts, setPosts] = useState(generateDummyPosts(8));
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRatingFilter, setSelectedRatingFilter] = useState(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const carouselRef = useRef(null);
+  const scrollViewRef = useRef(null);
+
+  // Track carousel scroll state to prevent parent ScrollView interference
+  const carouselScrollState = useRef({
+    isScrolling: false,
+    startX: 0,
+    startY: 0,
+  });
 
   const commonStyles = useCommonStyles();
   const colors = useAppColors();
@@ -39,12 +49,83 @@ const Product = ({navigation}) => {
     {id: '3', title: 'Rating', count: 4.5},
   ];
 
-  const images = [
-    'https://via.placeholder.com/600x400.png?text=Image+1',
-    'https://via.placeholder.com/600x400.png?text=Image+2',
-    'https://via.placeholder.com/600x400.png?text=Image+3',
-    'https://via.placeholder.com/600x400.png?text=Image+4',
-  ];
+  // Use product images from assets
+  const images = productImages;
+
+  // Filter posts by rating and search query - memoized for performance
+  const filteredPosts = useMemo(() => {
+    return posts.filter(post => {
+      const matchesRating = selectedRatingFilter
+        ? Math.floor(post.rating) === selectedRatingFilter
+        : true;
+      const matchesSearch =
+        searchQuery.trim() === '' ||
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.content.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesRating && matchesSearch;
+    });
+  }, [posts, selectedRatingFilter, searchQuery]);
+
+  const getImageSource = useCallback(img => {
+    if (!img) return productImages[0];
+    if (typeof img === 'number') return img;
+    if (typeof img === 'string') return {uri: img};
+    if (img.uri) return {uri: img.uri};
+    return productImages[0];
+  }, []);
+
+  // Memoized carousel item renderer for performance
+  const renderCarouselItem = useCallback(
+    ({item}) => {
+      const imageSource = getImageSource(item);
+      return (
+        <View style={styles.carouselImageContainer}>
+          <Image
+            source={imageSource}
+            style={styles.carouselImage}
+            resizeMode="cover"
+          />
+        </View>
+      );
+    },
+    [getImageSource],
+  );
+
+  const handleCarouselScroll = useCallback(
+    event => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const index = Math.round(offsetX / windowWidth);
+      // Clamp index to valid range
+      const clampedIndex = Math.max(0, Math.min(index, images.length - 1));
+      setCarouselIndex(clampedIndex);
+    },
+    [images.length],
+  );
+
+  // Handle scroll begin/end to manage gesture conflicts
+  const handleScrollBeginDrag = useCallback(() => {
+    carouselScrollState.current.isScrolling = true;
+    if (scrollViewRef.current) {
+      scrollViewRef.current.setNativeProps({scrollEnabled: false});
+    }
+  }, []);
+
+  const handleScrollEndDrag = useCallback(() => {
+    // Delay to allow momentum scroll to complete
+    setTimeout(() => {
+      carouselScrollState.current.isScrolling = false;
+      if (scrollViewRef.current) {
+        scrollViewRef.current.setNativeProps({scrollEnabled: true});
+      }
+    }, 100);
+  }, []);
+
+  const handleMomentumScrollEnd = useCallback(() => {
+    carouselScrollState.current.isScrolling = false;
+    if (scrollViewRef.current) {
+      scrollViewRef.current.setNativeProps({scrollEnabled: true});
+    }
+  }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -63,12 +144,9 @@ const Product = ({navigation}) => {
   );
   const ListHeaderComponent = () => {
     return (
-      <View>
+      <View style={styles.reviewsHeader}>
         <Text
-          style={[
-            commonStyles.subHeading,
-            {marginTop: 8, marginHorizontal: 8},
-          ]}>
+          style={[commonStyles.subHeading, {marginTop: 8, marginBottom: 12}]}>
           Reviews
         </Text>
         {/* Search Bar for Reviews */}
@@ -76,11 +154,72 @@ const Product = ({navigation}) => {
           <Search size={20} color={colors.secondaryText} />
           <TextInput
             style={[styles.searchInput, {color: colors.primaryText}]}
-            placeholder="Search reviews..."
+            placeholder="Search something about this product..."
             placeholderTextColor={colors.secondaryText}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
+        </View>
+        {/* Star Rating Filters */}
+        <View style={styles.ratingFiltersContainer}>
+          <Text
+            style={[
+              commonStyles.smallLabel,
+              {color: colors.secondaryText, marginBottom: 8},
+            ]}>
+            Filter by Rating:
+          </Text>
+          <View style={styles.ratingFilters}>
+            {[5, 4, 3, 2, 1].map(rating => (
+              <TouchableOpacity
+                key={rating}
+                style={[
+                  styles.ratingFilterButton,
+                  {
+                    backgroundColor:
+                      selectedRatingFilter === rating
+                        ? colors.brandAccentColor
+                        : colors.secondary,
+                    borderColor:
+                      selectedRatingFilter === rating
+                        ? colors.brandAccentColor
+                        : colors.divider,
+                  },
+                ]}
+                onPress={() =>
+                  setSelectedRatingFilter(
+                    selectedRatingFilter === rating ? null : rating,
+                  )
+                }>
+                <Star
+                  size={16}
+                  color={
+                    selectedRatingFilter === rating
+                      ? '#FFFFFF'
+                      : colors.starColor
+                  }
+                  fill={
+                    selectedRatingFilter === rating
+                      ? '#FFFFFF'
+                      : colors.starColor
+                  }
+                />
+                <View style={{width: 4}} />
+                <Text
+                  style={[
+                    styles.ratingFilterText,
+                    {
+                      color:
+                        selectedRatingFilter === rating
+                          ? '#FFFFFF'
+                          : colors.primaryText,
+                    },
+                  ]}>
+                  {rating}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </View>
     );
@@ -88,8 +227,21 @@ const Product = ({navigation}) => {
 
   return (
     <ScrollView
+      ref={scrollViewRef}
       style={[styles.container, {backgroundColor: colors.primaryBG}]}
-      contentContainerStyle={{alignItems: 'center'}}>
+      contentContainerStyle={{alignItems: 'center'}}
+      scrollEventThrottle={16}>
+      <View style={{width: '100%', paddingHorizontal: 16, paddingTop: 12}}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 4,
+          }}>
+          <ChevronLeft size={24} color={colors.primaryText} />
+        </TouchableOpacity>
+      </View>
       <View
         style={{flexDirection: 'column', alignSelf: 'flex-start', padding: 16}}>
         <Text style={[commonStyles.heading, {}]}>iPhone 15 Pro Max</Text>
@@ -106,33 +258,86 @@ const Product = ({navigation}) => {
         <StatsComponent stats={dummyStats} />
       </View>
       {images.length > 0 && (
-        <View style={styles.carouselContainer}>
-          <Carousel
-            width={windowWidth}
-            height={windowWidth}
+        <View style={styles.carouselWrapper}>
+          <FlatList
+            ref={carouselRef}
             data={images}
-            loop={false}
-            autoPlay={false}
-            scrollAnimationDuration={200}
-            onSnapToItem={index => setCurrentIndex(index)}
-            renderItem={({item}) => (
-              <Image source={{uri: item}} style={styles.singleImage} />
-            )}
+            renderItem={renderCarouselItem}
+            keyExtractor={(item, index) => `image-${index}`}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            decelerationRate={0}
+            snapToInterval={windowWidth}
+            snapToAlignment="start"
+            disableIntervalMomentum={true}
+            onScroll={handleCarouselScroll}
+            onScrollBeginDrag={handleScrollBeginDrag}
+            onScrollEndDrag={event => {
+              handleScrollEndDrag();
+              // Snap to nearest page after drag ends
+              const offsetX = event.nativeEvent.contentOffset.x;
+              const index = Math.round(offsetX / windowWidth);
+              const clampedIndex = Math.max(
+                0,
+                Math.min(index, images.length - 1),
+              );
+              if (carouselRef.current) {
+                carouselRef.current.scrollToIndex({
+                  index: clampedIndex,
+                  animated: true,
+                });
+              }
+            }}
+            onMomentumScrollEnd={event => {
+              handleMomentumScrollEnd();
+              // Ensure we're on the correct page
+              const offsetX = event.nativeEvent.contentOffset.x;
+              const index = Math.round(offsetX / windowWidth);
+              const clampedIndex = Math.max(
+                0,
+                Math.min(index, images.length - 1),
+              );
+              if (carouselIndex !== clampedIndex) {
+                setCarouselIndex(clampedIndex);
+              }
+            }}
+            scrollEventThrottle={16}
+            getItemLayout={(data, index) => ({
+              length: windowWidth,
+              offset: windowWidth * index,
+              index,
+            })}
+            initialNumToRender={2}
+            maxToRenderPerBatch={2}
+            windowSize={3}
+            removeClippedSubviews={true}
+            onScrollToIndexFailed={info => {
+              // Handle scroll to index failure gracefully
+              const wait = new Promise(resolve => setTimeout(resolve, 500));
+              wait.then(() => {
+                if (carouselRef.current) {
+                  carouselRef.current.scrollToIndex({
+                    index: info.index,
+                    animated: false,
+                  });
+                }
+              });
+            }}
           />
           {images.length > 1 && (
             <View style={styles.dotsContainer}>
               {images.map((_, index) => (
                 <View
-                  key={index}
+                  key={`dot-${index}`}
                   style={[
-                    index === currentIndex
-                      ? styles.dotHighlightedStyle
-                      : styles.dotStyle,
+                    styles.dot,
                     {
+                      width: carouselIndex === index ? 24 : 8,
                       backgroundColor:
-                        index === currentIndex
+                        carouselIndex === index
                           ? colors.brandAccentColor
-                          : 'gray',
+                          : colors.divider,
                     },
                   ]}
                 />
@@ -155,22 +360,26 @@ const Product = ({navigation}) => {
           libero non eros.
         </Text>
       </View>
-      <View>
+      <View style={styles.reviewsContainer}>
         <FlatList
-          data={posts}
+          data={filteredPosts}
           renderItem={renderItem}
           key={item => item.id}
           ListHeaderComponent={ListHeaderComponent}
           keyExtractor={item => item.id}
-          // onEndReached={loadMorePosts}
-          // onEndReachedThreshold={0.9}
-          // onScroll={handleScroll}
           scrollEventThrottle={8}
-          initialNumToRender={5} // Adjust based on expected initial content size
+          initialNumToRender={5}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
           contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={[commonStyles.text, {color: colors.secondaryText}]}>
+                No reviews found matching your criteria
+              </Text>
+            </View>
+          }
         />
       </View>
     </ScrollView>
@@ -200,36 +409,64 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Roboto-Regular',
   },
-  carouselContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-    height: windowWidth + 16,
-  },
-  singleImage: {
+  carouselWrapper: {
+    marginVertical: 16,
     width: windowWidth,
     height: windowWidth,
-    resizeMode: 'cover', // Ensures the image covers the container
-    // borderRadius: 8,
+  },
+  carouselImageContainer: {
+    width: windowWidth,
+    height: windowWidth,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  carouselImage: {
+    width: windowWidth,
+    height: windowWidth,
   },
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 12,
+    paddingHorizontal: 8,
   },
-  dotStyle: {
-    width: 4,
-    height: 4,
-    borderRadius: 3,
-    marginHorizontal: 2,
-    backgroundColor: 'gray',
+  dot: {
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
   },
-  dotHighlightedStyle: {
-    width: 6,
-    height: 6,
-    borderRadius: 5,
-    marginHorizontal: 2,
+  reviewsContainer: {
+    width: '100%',
+  },
+  reviewsHeader: {
+    paddingHorizontal: 16,
+  },
+  ratingFiltersContainer: {
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  ratingFilters: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  ratingFilterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  ratingFilterText: {
+    fontSize: 14,
+    fontFamily: 'Roboto-Medium',
+  },
+  emptyContainer: {
+    padding: 32,
+    alignItems: 'center',
   },
   specsTitleContainer: {
     flexDirection: 'row',

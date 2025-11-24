@@ -20,7 +20,18 @@ const ProductTab = () => {
               {backgroundColor: colors.secondary},
             ]}>
             {/* Product Image */}
-            <Image source={{uri: product.image}} style={styles.productImage} />
+            <Image
+              source={
+                typeof product.image === 'number'
+                  ? product.image
+                  : typeof product.image === 'string'
+                  ? {uri: product.image}
+                  : product.image?.uri
+                  ? {uri: product.image.uri}
+                  : null
+              }
+              style={styles.productImage}
+            />
 
             {/* Product Info */}
             <View style={styles.productInfo}>

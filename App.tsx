@@ -8,7 +8,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import React, { useEffect } from 'react';
 import {
-  SafeAreaView,
   StatusBar,
   StyleSheet,
 } from 'react-native';
@@ -17,7 +16,7 @@ import { I18nextProvider } from 'react-i18next';
 import i18next from './src/services/i18next';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import SplashScreen from 'react-native-splash-screen';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
 // Main app content with access to theme context
 const AppContent = () => {
   const { actualTheme, colors } = useTheme();

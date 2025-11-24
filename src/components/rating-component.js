@@ -1,40 +1,35 @@
 import React from 'react';
-import {StyleSheet, View, useColorScheme} from 'react-native';
-import {
-  StarDark,
-  StarFilled,
-  StarFilledGreen,
-  StarLight,
-} from '../assets/icons';
+import {StyleSheet, View, Text, useColorScheme} from 'react-native';
+import {Star} from 'lucide-react-native';
+import {darkColors, lightColors} from '../utils/colors';
 
 const RatingComponent = ({rating = 5}) => {
   const colorScheme = useColorScheme();
-  const stars = [];
-  for (let i = 1; i <= 5; i++) {
-    if (i <= rating) {
-      stars.push(
-        <View key={i} style={styles.star}>
-          {rating === 5 ? <StarFilledGreen /> : <StarFilled />}
-        </View>,
-      );
-    } else {
-      stars.push(
-        <View key={i} style={styles.star}>
-          {colorScheme === 'dark' ? <StarDark /> : <StarLight />}
-        </View>,
-      );
-    }
-  }
-
-  return <View style={styles.container}>{stars}</View>;
+  const colors = colorScheme === 'dark' ? darkColors : lightColors;
+  
+  return (
+    <View style={styles.container}>
+      <Star 
+        size={16} 
+        color={colors.starColor} 
+        fill={colors.starColor}
+      />
+      <Text style={[styles.ratingText, {color: colors.primaryText}]}>
+        {rating.toFixed(1)}
+      </Text>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
-  star: {
-    marginHorizontal: 2,
+  ratingText: {
+    fontSize: 14,
+    fontFamily: 'Roboto-Medium',
+    marginLeft: 4,
   },
 });
 

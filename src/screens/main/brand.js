@@ -18,11 +18,11 @@ import {TouchableOpacity} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {ProductTab, ReviewsTab, ServicesTab} from '../../components/tabs';
 import {Tabs} from 'react-native-collapsible-tab-view';
-import {Search} from 'lucide-react-native';
+import {Search, ChevronLeft} from 'lucide-react-native';
 
 const Tab = createMaterialTopTabNavigator();
 
-const Brand = () => {
+const Brand = ({navigation}) => {
   const commonStyles = useCommonStyles();
   const colors = useAppColors();
   const [searchQuery, setSearchQuery] = useState('');
@@ -109,8 +109,19 @@ const Brand = () => {
     <ScrollView
       style={[styles.container, {backgroundColor: colors.primaryBG}]}
       contentContainerStyle={{alignItems: 'center'}}>
+      <View style={{width: '100%', paddingHorizontal: 16, paddingTop: 12}}>
+        <TouchableOpacity
+          onPress={() => navigation && navigation.goBack && navigation.goBack()}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 4,
+          }}>
+          <ChevronLeft size={24} color={colors.primaryText} />
+        </TouchableOpacity>
+      </View>
       <View style={styles.brandInfoContainer}>
-        <Image style={styles.logo} />
+        <View style={styles.logo} />
         <View style={styles.infoContentContainer}>
           {/* Add brand information content here */}
           <View>
@@ -145,17 +156,17 @@ const Brand = () => {
             92 345 2789929
           </Text>
           <TouchableOpacity>
-            <Icon name="copy" color={colors.linkColor} size={16} />
+            <Icon name="files-o" color={colors.linkColor} size={16} />
           </TouchableOpacity>
         </View>
         <View style={styles.contactItem}>
-          <Icon name="address" color={colors.brandAccentColor} size={16} />
+          <Icon name="map-marker" color={colors.brandAccentColor} size={16} />
           <Text style={[commonStyles.label, {marginHorizontal: 8}]}>
             Apple Inc. 1 Apple Park Way. Cupertino, CA 95014. United States
           </Text>
         </View>
         <View style={styles.contactItem}>
-          <Icon name="location" color={colors.brandAccentColor} size={16} />
+          <Icon name="map" color={colors.brandAccentColor} size={16} />
           <TouchableOpacity>
             <Text
               style={[

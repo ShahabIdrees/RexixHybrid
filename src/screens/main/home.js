@@ -1,19 +1,17 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useCallback} from 'react';
 import {
   StyleSheet,
   Text,
   View,
   FlatList,
   Animated,
-  useColorScheme,
   RefreshControl,
-  Image,
   TouchableOpacity,
 } from 'react-native';
 import {ReviewPost} from '../../components';
-import {darkColors, lightColors} from '../../utils/colors';
 import {generateDummyPosts} from '../../utils/helper-functions';
-import {MessageSquare, User} from 'lucide-react-native';
+import {Mail, UserCircle2} from 'lucide-react-native';
+import {useTheme} from '../../contexts/ThemeContext';
 
 // Persistent counter for generating unique IDs
 
@@ -24,28 +22,35 @@ const Home = ({navigation}) => {
   const [refreshing, setRefreshing] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [lastOffset, setLastOffset] = useState(0);
-  const colorScheme = useColorScheme();
-  const colors = colorScheme === 'dark' ? darkColors : lightColors;
-  const loadMorePosts = () => {
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const {colors, actualTheme} = useTheme();
+  const loadMorePosts = useCallback(() => {
     const newPosts = generateDummyPosts(10);
-    setPosts([...posts, ...newPosts]);
-  };
+    setPosts(prevPosts => [...prevPosts, ...newPosts]);
+  }, []);
 
-  const onRefresh = () => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
       setPosts(generateDummyPosts(10)); // Refresh the list with new data
       setRefreshing(false);
     }, 2000);
-  };
+  }, []);
 
-  const renderItem = ({item}) => (
-    <ReviewPost
-      title={item.title}
-      content={item.content}
-      images={item.images}
-    />
+  const renderItem = useCallback(
+    ({item}) => (
+      <ReviewPost
+        title={item.title}
+        content={item.content}
+        images={item.images}
+        rating={item.rating}
+        postId={item.id}
+      />
+    ),
+    [],
   );
+
+  const keyExtractor = useCallback(item => item.id, []);
 
   const ListHeaderComponent = () => (
     <Animated.View
@@ -56,28 +61,25 @@ const Home = ({navigation}) => {
             {
               translateY: scrollY.interpolate({
                 inputRange: [0, 1],
-                outputRange: [0, -60], // Translate up to hide
+                outputRange: [0, -70], // Translate up to hide completely
                 extrapolate: 'clamp',
               }),
             },
           ],
           opacity: scrollY.interpolate({
-            inputRange: [0, 1],
-            outputRange: [1, 0], // Fade out as it translates up
+            inputRange: [0, 0.5, 1],
+            outputRange: [1, 0.5, 0], // Smooth fade out
             extrapolate: 'clamp',
           }),
         },
         {
-          backgroundColor:
-            colorScheme === 'dark'
-              ? darkColors.primaryBG
-              : lightColors.primaryBG,
+          backgroundColor: colors.primaryBG,
         },
       ]}>
       <Text
         style={[
           styles.headerText,
-          {color: colorScheme === 'dark' ? '#B00814' : '#3A0050'},
+          {color: actualTheme === 'dark' ? '#B00814' : '#3A0050'},
         ]}>
         Rexix
       </Text>
@@ -87,9 +89,10 @@ const Home = ({navigation}) => {
           onPress={() => {
             navigation.navigate('Messages');
           }}>
-          <MessageSquare
+          <Mail
             size={24}
-            color={colorScheme === 'dark' ? '#B00814' : '#3A0050'}
+            color={actualTheme === 'dark' ? '#B00814' : '#3A0050'}
+            strokeWidth={2}
           />
         </TouchableOpacity>
         <TouchableOpacity
@@ -97,9 +100,10 @@ const Home = ({navigation}) => {
           onPress={() => {
             navigation.navigate('Profile');
           }}>
-          <User
+          <UserCircle2
             size={24}
-            color={colorScheme === 'dark' ? '#B00814' : '#3A0050'}
+            color={actualTheme === 'dark' ? '#B00814' : '#3A0050'}
+            strokeWidth={2}
           />
         </TouchableOpacity>
       </View>
@@ -108,13 +112,31 @@ const Home = ({navigation}) => {
 
   const handleScroll = event => {
     const currentOffset = event.nativeEvent.contentOffset.y;
-    const direction = currentOffset > lastOffset ? 'down' : 'up';
-    const offsetValue = direction === 'down' ? 1 : 0;
-    Animated.timing(scrollY, {
-      toValue: offsetValue,
-      duration: 30,
-      useNativeDriver: true, // Use native driver for better performance
-    }).start();
+    const diff = currentOffset - lastOffset;
+
+    // Only hide/show header if scrolled enough and not at the top
+    if (Math.abs(diff) > 5 && currentOffset > 50) {
+      const shouldHide = diff > 0; // Scrolling down
+
+      if (shouldHide !== !headerVisible) {
+        setHeaderVisible(!shouldHide);
+
+        Animated.timing(scrollY, {
+          toValue: shouldHide ? 1 : 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+      }
+    } else if (currentOffset <= 50 && !headerVisible) {
+      // Always show header when near the top
+      setHeaderVisible(true);
+      Animated.timing(scrollY, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+
     setLastOffset(currentOffset);
   };
 
@@ -123,22 +145,23 @@ const Home = ({navigation}) => {
       style={[
         styles.container,
         {
-          backgroundColor:
-            colorScheme === 'dark'
-              ? darkColors.primaryBG
-              : lightColors.primaryBG,
+          backgroundColor: colors.primaryBG,
         },
       ]}>
       {ListHeaderComponent()}
       <FlatList
         data={posts}
         renderItem={renderItem}
-        keyExtractor={item => item.id}
+        keyExtractor={keyExtractor}
         onEndReached={loadMorePosts}
-        onEndReachedThreshold={0.9}
+        onEndReachedThreshold={0.5}
         onScroll={handleScroll}
-        scrollEventThrottle={8}
-        initialNumToRender={5} // Adjust based on expected initial content size
+        scrollEventThrottle={16}
+        initialNumToRender={3}
+        maxToRenderPerBatch={5}
+        windowSize={5}
+        removeClippedSubviews={true}
+        updateCellsBatchingPeriod={50}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -183,8 +206,9 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   list: {
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: 66,
+    paddingBottom: 100,
+    paddingHorizontal: 0,
   },
 });
 
